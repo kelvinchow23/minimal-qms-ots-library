@@ -1,12 +1,27 @@
-code,description,typical_class
-CON,Connectors,B
-RES,Resistors,B
-CAP,Capacitors,B
-ICS,Integrated circuits,A
-OPT,LEDs and optical parts,A
-MOD,Modules and boards bought ready-made (e.g. Raspberry Pi Pico),A
-ELE,Other electrical and electromechanical (switches / fans / power supplies),B
-FST,Fasteners and inserts,B
-MCH,Other mechanical hardware (bearings / standoffs / feet / extrusion),B
-CBL,Cable and wire,B
-CNS,Consumables (glue / flux / solder / zip ties),C
+code,family,description,typical_class
+ECJ,EC,Connectors and headers,B
+ECW,EC,Wire and cable,B
+ECP,EC,Power supplies and converters,A
+ECS,EC,Safety devices (fuses / breakers / interlocks / e-stops),A
+ECO,EC,LEDs and optoelectronics,A
+ECI,EC,Integrated circuits,A
+ECM,EC,Modules and ready-made boards (e.g. Raspberry Pi Pico),A
+ECC,EC,Capacitors,B
+ECL,EC,Inductors and ferrites,B
+ECD,EC,Diodes,B
+ECT,EC,Transistors and MOSFETs,B
+ECX,EC,Other electrical (switches / relays / sensors / resistors),B
+HWS,HW,Screws and bolts,B
+HWN,HW,Nuts,B
+HWW,HW,Washers,B
+HWD,HW,Standoffs and spacers,B
+HWI,HW,Inserts (heat-set / threaded),B
+HWB,HW,Bearings and bushings,B
+HWP,HW,Plumbing: fittings / tubing / valves,B
+HWX,HW,Other hardware,B
+MCE,MC,Extrusion and structural profiles,B
+MCF,MC,Fans and thermal parts (heatsinks / pads),B
+MCX,MC,Other mechanical,B
+CNA,CN,Adhesives and tapes,C
+CNS,CN,Solder and flux,C
+CNX,CN,Other consumables,C

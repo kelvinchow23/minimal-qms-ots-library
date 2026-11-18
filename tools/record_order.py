@@ -4,7 +4,7 @@ Usage:
     python tools/record_order.py REQUISITION.csv SUPPLIER ORDER_REF PRODUCT_REPO [--date YYYY-MM-DD]
 
 REQUISITION.csv is a file produced by requisition.py (and uploaded to the purchasing
-system). Each row is mapped back to its internal PN through the library's parts.csv and
+system). Each row is mapped back to its internal PN through the library's parts/CCC.csv files and
 the product's 03_release/parts.csv (supplier_pn, then mpn). Rows are appended to PRODUCT_REPO/purchasing/purchases.csv with new P-nnnn line IDs,
 and the requisition file is copied to PRODUCT_REPO/purchasing/requisitions/ORDER_REF.csv.
 The order date defaults to today; use the actual order date, never a backdated one.
@@ -53,7 +53,7 @@ def main(argv):
         prod_no = row["Prod No"].strip()
         p = lookup.get(prod_no)
         if p is None:
-            print(f"error: Prod No {prod_no} ({row['Item Name']}) has no {supplier} entry in parts.csv")
+            print(f"error: Prod No {prod_no} ({row['Item Name']}) has no {supplier} entry in the library or the product")
             return 1
         new.append({
             "line_id": f"P-{nxt:04d}", "pn": p["pn"], "description": p["description"],

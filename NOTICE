@@ -1,5 +1,5 @@
 parts-library
 Copyright (c) 2026 Kelvin Chow. Licensed under the MIT License (see LICENSE).
 
-OTS category codes in categories.csv are adapted from git-plm/parts, partnumbers.md
+The CCC-NNNN part number format is adapted from git-plm/parts, partnumbers.md
 (https://github.com/git-plm/parts). Licence: MIT. Copyright (c) 2024 Git PLM.
