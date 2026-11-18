@@ -20,6 +20,9 @@ rules apply here (never commit to `main`, never merge or approve, never backdate
 6. Commit format: `[PN] summary`, e.g. `[OPT-0001] add 365 nm LED`, or `[LIB] summary` for
    tools and repo-wide changes.
 
+7. **Canadian English spelling** in prose (organization, colour, centre, licence as the
+   noun). Proper names and code identifiers stay as they are.
+
 ## Typical requests
 
 - "Add these parts from my Mouser cart": create one `new_pn.py` row per item, with

@@ -72,6 +72,6 @@ included; the tool warns when a price is missing or older than 90 days.
 `--cart-link SUPPLIER=URL` puts one cart link on every row for that supplier.
 Quantities are rounded up to whole items, and `--stock stock.csv` subtracts stock on hand.
 
-## License
+## Licence
 
 MIT. OTS category codes adapted from [git-plm/parts](https://github.com/git-plm/parts) (see NOTICE).
