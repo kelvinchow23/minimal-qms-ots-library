@@ -1,64 +1,69 @@
 # parts-library
 
-The organisation-wide part number register and purchased-part data for
+Off-the-shelf (OTS) parts and the naming registers for
 [minimalQMS](https://github.com/kelvinchow23/minimal-qms) product repos.
 
-- **One register for every part number,** so `RES-0001` means the same resistor in every
-  product, and made parts (`PCB-0001`, `SYS-A-0001`) never collide between products.
-- **Purchased-part data in one place:** manufacturer, MPN, supplier, vendor number, link,
-  and the last known price with its date.
-- **Purchasing upload files generated from a BOM,** in the purchasing system's CSV format.
+- **OTS parts only:** manufacturer, MPN, supplier, vendor number, link, and the last known
+  price with its date. Custom parts and assemblies live in the product repo that owns them.
+- **Naming registers:** OTS category codes (`categories.csv`) and project codes
+  (`projects.csv`).
+- **Purchasing upload files generated from a product BOM,** in the purchasing system's
+  CSV format, covering both OTS parts and custom parts bought from fabricators.
 - **Orders recorded back** into the product repo's `purchases.csv` (minimalQMS SOP-005).
 
 ## Part numbers (minimalQMS SOP-002)
 
-| Format | Used for | Examples |
-|---|---|---|
-| `CCC-NNNN` | Parts: single items, made or purchased | `PCB-0001` bare board, `MEC-0003` printed bracket, `RES-0002` |
-| `CCC-A-NNNN` | Assemblies: items with sub-parts or an assembly instruction | `PCB-A-0001` assembled board, `SYS-A-0001` complete product |
+| Type | Format | Lives in | Example |
+|---|---|---|---|
+| OTS part | `CCC-NNNN` (category) | this library | `FST-0001` M3x8 screws |
+| Custom part | `PPP-NNNN` (project) | product repo `03_release/parts.csv` | `PRX-0004` housing lid |
+| Custom assembly | `PPP-A-NNNN` (project) | product repo `03_release/parts.csv` | `PRX-A-0003` assembled PCB |
 
-Category codes are in `categories.csv`. Revisions of custom parts are tracked in the
-product repo that owns them (`owner_repo`), not here.
+Custom parts and assemblies share one number sequence per project. Category and project
+codes are 3 capital letters and never overlap.
 
-## parts.csv
+## parts.csv (OTS)
 
-| Column | Meaning |
-|---|---|
-| `pn` | Internal part number |
-| `description` | Used as "Item Name" on purchasing uploads |
-| `class` | A / B / C traceability class (SOP-002) |
-| `make_buy` | `make`: built or printed in-house. `buy`: ordered from a supplier, including custom parts made by a fabricator |
-| `owner_repo` | Product repo that owns a custom part's design and revisions |
-| `manufacturer`, `mpn` | Manufacturer and manufacturer part number |
-| `supplier`, `supplier_pn` | Usual supplier and its part number ("Prod No" on uploads) |
-| `link` | Product page |
-| `unit_price`, `currency`, `price_date` | Last known unit price and the date it was checked |
-| `lifecycle` | `draft` / `released` / `obsolete` |
-| `notes` | Anything else |
+`pn, description, class, manufacturer, mpn, supplier, supplier_pn, link, unit_price,
+currency, price_date, lifecycle, notes`
+
+## Product repo parts.csv (custom)
+
+`pn, rev, description, class, lifecycle, make, source, drawing, supplier, supplier_pn,
+link, unit_price, currency, price_date, notes`
+
+- `make`: `print`, `machine`, `fab` (made by an outside fabricator), `assemble`, …
+- `source`: where the design lives, e.g. `Fusion: Housing lid v12` or a KiCad path.
+- The purchasing columns match the OTS file, so custom parts bought from a fabricator
+  (e.g. a PCB) appear on the same upload files.
 
 When generating an order, anything with a `supplier` is ordered as one item, even if it
-has its own BOM (e.g. a PCB ordered already assembled). Items without a supplier are
-expanded through the product BOM.
+has its own BOM (e.g. a PCB ordered already assembled). Assemblies without a supplier are
+expanded; custom parts made in-house are listed but not ordered.
 
 ## Tools
 
 Standard-library Python. Run from the repo root.
 
 ```bash
-# allocate a number (prints the new PN)
-python tools/new_pn.py OPT "365 nm UV LED, 3535" make_buy=buy class=A \
+# OTS part (prints the new PN)
+python tools/new_pn.py OPT "365 nm UV LED, 3535" class=A \
     manufacturer=Lumileds mpn=L1F3-U365200014000 supplier=Mouser \
     supplier_pn=997-L1F3U36520001400 link=https://www.mouser.com/... unit_price=4.12 currency=CAD
-python tools/new_pn.py PCB "LED driver board, assembled" --assembly --same-as=PCB-0001
+
+# custom part or assembly, written to the product repo's 03_release/parts.csv
+python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print "source=Fusion: Housing lid v12"
+python tools/new_pn.py PRX "LED driver board, assembled" --repo ../photo-reactor --assembly \
+    make=fab supplier=JLCPCB link=https://jlcpcb.com
 
 # purchasing upload files for 3 units of a product (one CSV per supplier)
-python tools/requisition.py ../photo-reactor/03_release/bom.csv SYS-A-0001 3 --out out/
+python tools/requisition.py ../photo-reactor/03_release/bom.csv PRX-A-0001 3 --out out/
 
 # after ordering: record the order in the product repo
 python tools/record_order.py out/mouser-2026-11-18.csv Mouser "PO 45012" ../photo-reactor
 
-# check parts.csv (also runs in CI)
-python tools/check.py
+# check the library (also runs in CI), optionally a product's custom parts
+python tools/check.py --repo ../photo-reactor
 ```
 
 The upload files have exactly the purchasing template's columns: `Item Name`, `Prod No`,
@@ -69,4 +74,4 @@ Quantities are rounded up to whole items, and `--stock stock.csv` subtracts stoc
 
 ## License
 
-MIT. Category codes adapted from [git-plm/parts](https://github.com/git-plm/parts) (see NOTICE).
+MIT. OTS category codes adapted from [git-plm/parts](https://github.com/git-plm/parts) (see NOTICE).
