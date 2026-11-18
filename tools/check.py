@@ -1,69 +1,123 @@
-"""Check parts.csv against the library rules. Exit code 1 on any error. Used by CI.
+"""Check the library, and optionally a product repo's custom parts. Exit code 1 on errors.
 
-Usage: python tools/check.py
+Usage:
+    python tools/check.py                      # library: parts.csv, categories.csv, projects.csv
+    python tools/check.py --repo PRODUCT_REPO  # also the product's 03_release/parts.csv
 """
 import sys
 from datetime import date
 
-from lib import FIELDS, PARTS, PN_RE, categories, read_csv
+from lib import (CUSTOM_FIELDS, FIELDS, PARTS, PN_RE, categories, load_product_parts,
+                 product_parts_path, projects, read_csv)
 
-with open(PARTS, encoding="utf-8-sig") as f:
-    header = f.readline().strip().split(",")
+LIFECYCLE = ("draft", "released", "obsolete")
 
 
-def main():
-    errors = []
-    if header != FIELDS:
+def header(path):
+    with open(path, encoding="utf-8-sig") as f:
+        return f.readline().strip().split(",")
+
+
+def check_price(r, where, errors):
+    if r.get("unit_price"):
+        try:
+            float(r["unit_price"])
+        except ValueError:
+            errors.append(f"{where}: unit_price must be a number")
+        if not r.get("currency"):
+            errors.append(f"{where}: unit_price needs currency")
+        if not r.get("price_date"):
+            errors.append(f"{where}: unit_price needs price_date")
+    if r.get("price_date"):
+        try:
+            if date.fromisoformat(r["price_date"]) > date.today():
+                errors.append(f"{where}: price_date is in the future")
+        except ValueError:
+            errors.append(f"{where}: price_date must be YYYY-MM-DD")
+
+
+def check_library(errors):
+    cats, projs = categories(), projects()
+    clash = set(cats) & set(projs)
+    if clash:
+        errors.append(f"codes used as both category and project: {sorted(clash)}")
+    for code in list(cats) + list(projs):
+        if not (len(code) == 3 and code.isalpha() and code.isupper()):
+            errors.append(f"code {code!r} must be 3 capital letters")
+    if header(PARTS) != FIELDS:
         errors.append(f"parts.csv header must be: {','.join(FIELDS)}")
-    cats = categories()
     seen = set()
     for i, r in enumerate(read_csv(PARTS), start=2):
         pn = r.get("pn", "")
-        where = f"line {i} ({pn or 'no pn'})"
+        where = f"parts.csv line {i} ({pn or 'no pn'})"
         m = PN_RE.match(pn)
-        if not m:
-            errors.append(f"{where}: part number must be CCC-NNNN or CCC-A-NNNN")
-        elif m.group("cat") not in cats:
-            errors.append(f"{where}: unknown category {m.group('cat')}")
+        if not m or m.group("asm"):
+            errors.append(f"{where}: OTS part numbers are CCC-NNNN")
+        elif m.group("code") not in cats:
+            errors.append(f"{where}: {m.group('code')} is not an OTS category")
         if pn in seen:
             errors.append(f"{where}: duplicate part number")
         seen.add(pn)
         if not r.get("description"):
             errors.append(f"{where}: description is required")
-        if r.get("class") not in ("A", "B", "C", ""):
+        if r.get("class") not in ("A", "B", "C"):
             errors.append(f"{where}: class must be A, B or C")
-        if r.get("make_buy") not in ("make", "buy"):
-            errors.append(f"{where}: make_buy must be make or buy")
-        if r.get("lifecycle") not in ("draft", "released", "obsolete"):
+        if r.get("lifecycle") not in LIFECYCLE:
             errors.append(f"{where}: lifecycle must be draft, released or obsolete")
-        if r.get("make_buy") == "buy" and r.get("lifecycle") == "released":
-            for k in ("class", "supplier", "link"):
+        if r.get("lifecycle") == "released":
+            for k in ("supplier", "link"):
                 if not r.get(k):
-                    errors.append(f"{where}: released purchased part needs {k}")
+                    errors.append(f"{where}: released part needs {k}")
             if not (r.get("supplier_pn") or r.get("mpn")):
-                errors.append(f"{where}: released purchased part needs supplier_pn or mpn")
-        if r.get("make_buy") == "make" and not r.get("owner_repo"):
-            errors.append(f"{where}: made part needs owner_repo")
-        if r.get("unit_price"):
-            try:
-                float(r["unit_price"])
-            except ValueError:
-                errors.append(f"{where}: unit_price must be a number")
-            if not r.get("currency"):
-                errors.append(f"{where}: unit_price needs currency")
-            if not r.get("price_date"):
-                errors.append(f"{where}: unit_price needs price_date")
-        if r.get("price_date"):
-            try:
-                if date.fromisoformat(r["price_date"]) > date.today():
-                    errors.append(f"{where}: price_date is in the future")
-            except ValueError:
-                errors.append(f"{where}: price_date must be YYYY-MM-DD")
+                errors.append(f"{where}: released part needs supplier_pn or mpn")
+        check_price(r, where, errors)
+    return len(seen)
+
+
+def check_product(repo, errors):
+    path = product_parts_path(repo)
+    rows = load_product_parts(repo)
+    if not rows:
+        return 0
+    if header(path) != CUSTOM_FIELDS:
+        errors.append(f"{path} header must be: {','.join(CUSTOM_FIELDS)}")
+    projs, seen = projects(), set()
+    for i, r in enumerate(rows, start=2):
+        pn = r.get("pn", "")
+        where = f"{path} line {i} ({pn or 'no pn'})"
+        m = PN_RE.match(pn)
+        if not m:
+            errors.append(f"{where}: custom part numbers are PPP-NNNN or PPP-A-NNNN")
+        elif m.group("code") not in projs:
+            errors.append(f"{where}: {m.group('code')} is not a project code in projects.csv")
+        if pn in seen:
+            errors.append(f"{where}: duplicate part number")
+        seen.add(pn)
+        for k in ("description", "rev"):
+            if not r.get(k):
+                errors.append(f"{where}: {k} is required")
+        if r.get("class") not in ("A", "B", "C"):
+            errors.append(f"{where}: class must be A, B or C")
+        if r.get("lifecycle") not in LIFECYCLE:
+            errors.append(f"{where}: lifecycle must be draft, released or obsolete")
+        if r.get("lifecycle") == "released" and not r.get("source"):
+            errors.append(f"{where}: released custom part needs source (CAD reference)")
+        check_price(r, where, errors)
+    return len(seen)
+
+
+def main(argv):
+    errors = []
+    n = check_library(errors)
+    msg = f"{n} library parts"
+    if "--repo" in argv:
+        repo = argv[argv.index("--repo") + 1]
+        msg += f", {check_product(repo, errors)} custom parts in {repo}"
     for e in errors:
         print(f"error: {e}")
-    print(f"{len(seen)} parts checked, {len(errors)} errors")
+    print(f"{msg} checked, {len(errors)} errors")
     return 1 if errors else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv))

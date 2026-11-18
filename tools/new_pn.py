@@ -1,70 +1,87 @@
-"""Allocate the next free part number and add it to parts.csv.
+"""Allocate the next free part number.
 
-Usage:
-    python tools/new_pn.py CCC "description" [--assembly] [field=value ...]
+OTS part (written to this library's parts.csv):
+    python tools/new_pn.py CCC "description" [field=value ...]
+
+Custom part or assembly (written to the product repo's 03_release/parts.csv):
+    python tools/new_pn.py PPP "description" --repo PATH [--assembly] [field=value ...]
+
+CCC is a category code (categories.csv). PPP is a project code (projects.csv).
+Custom parts are numbered PPP-NNNN and assemblies PPP-A-NNNN; parts and assemblies share
+one number sequence per project, so PRX-0003 and PRX-A-0003 never mean different things.
 
 Examples:
-    python tools/new_pn.py RES "10k 0603 1% resistor" make_buy=buy class=B \
-        manufacturer=Yageo mpn=RC0603FR-0710KL supplier=Mouser supplier_pn=603-RC0603FR-0710KL \
-        link=https://www.mouser.com/... unit_price=0.10 currency=CAD
-    python tools/new_pn.py PCB "Photoreactor LED driver board" --assembly make_buy=buy \
-        owner_repo=kelvinchow23/photo-reactor
+    python tools/new_pn.py FST "M3x8 SHCS, stainless, pack of 100" class=B \\
+        manufacturer=McMaster-Carr mpn=91292A112 supplier=McMaster-Carr \\
+        supplier_pn=91292A112 link=https://www.mcmaster.com/91292A112/ unit_price=9.85 currency=USD
+    python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print \\
+        "source=Fusion: Photoreactor/Housing lid v12"
+    python tools/new_pn.py PRX "LED driver board, assembled" --repo ../photo-reactor --assembly \\
+        make=fab supplier=JLCPCB link=https://jlcpcb.com
 
-Numbers are shared between parts and assemblies in a category: PCB-0001 and PCB-A-0001
-are the bare and assembled versions of the same board. --same-as PCB-0001 reuses that
-number for the assembly. Otherwise the next number not used by either form is issued.
-The new row starts as lifecycle=draft. price_date defaults to today when a price is given.
+New rows start as lifecycle=draft (custom parts also rev=A). price_date defaults to today
+when a price is given.
 """
 import sys
 from datetime import date
 
-from lib import FIELDS, PN_RE, categories, load_parts, write_csv, PARTS
+from lib import (CUSTOM_FIELDS, FIELDS, PARTS, PN_RE, categories, load_parts,
+                 load_product_parts, product_parts_path, projects, write_csv)
+
+
+def next_number(rows, code):
+    taken = [int(m.group("num")) for m in (PN_RE.match(r["pn"]) for r in rows)
+             if m and m.group("code") == code]
+    return max(taken, default=0) + 1
 
 
 def main(argv):
-    args = [a for a in argv[1:] if not a.startswith("--") and "=" not in a]
-    flags = [a for a in argv[1:] if a.startswith("--")]
-    fields = dict(a.split("=", 1) for a in argv[1:] if "=" in a and not a.startswith("--"))
-    if len(args) < 2:
+    args, fields, repo, assembly = [], {}, None, False
+    it = iter(argv[1:])
+    for a in it:
+        if a == "--repo":
+            repo = next(it)
+        elif a == "--assembly":
+            assembly = True
+        elif "=" in a and not a.startswith("--"):
+            k, v = a.split("=", 1)
+            fields[k] = v
+        else:
+            args.append(a)
+    if len(args) != 2:
         print(__doc__)
         return 1
-    cat, description = args[0].upper(), args[1]
-    if cat not in categories():
-        print(f"error: unknown category {cat}; add it to categories.csv first")
-        return 1
-    assembly = "--assembly" in flags
-    same_as = next((f.split("=", 1)[1] for f in flags if f.startswith("--same-as=")), None)
+    code, description = args[0].upper(), args[1]
+    cats, projs = categories(), projects()
 
-    rows = load_parts()
-    used = {(m.group("cat"), m.group("num")) for m in (PN_RE.match(r["pn"]) for r in rows) if m}
-    existing = {r["pn"] for r in rows}
-
-    if same_as:
-        m = PN_RE.match(same_as)
-        if not m or m.group("cat") != cat:
-            print(f"error: --same-as {same_as} is not a {cat} part number")
+    if code in cats:
+        if repo or assembly:
+            print("error: OTS parts are single items in this library; --repo/--assembly are for custom parts")
             return 1
-        num = m.group("num")
+        path, cols, rows = PARTS, FIELDS, load_parts()
+        pn = f"{code}-{next_number(rows, code):04d}"
+        row = {"class": cats[code]["typical_class"]}
+    elif code in projs:
+        if not repo:
+            print("error: custom parts need --repo (the product repo that owns them)")
+            return 1
+        path, cols, rows = product_parts_path(repo), CUSTOM_FIELDS, load_product_parts(repo)
+        num = next_number(rows, code)
+        pn = f"{code}-A-{num:04d}" if assembly else f"{code}-{num:04d}"
+        row = {"rev": "A", "class": "A"}
     else:
-        taken = sorted(int(n) for c, n in used if c == cat)
-        num = f"{(taken[-1] + 1) if taken else 1:04d}"
-    pn = f"{cat}-A-{num}" if assembly else f"{cat}-{num}"
-    if pn in existing:
-        print(f"error: {pn} already exists")
+        print(f"error: {code} is neither a category (categories.csv) nor a project (projects.csv)")
         return 1
 
-    row = {k: "" for k in FIELDS}
-    row.update(pn=pn, description=description, lifecycle="draft",
-               **{"class": categories()[cat]["typical_class"] if categories()[cat]["typical_class"] != "-" else ""})
-    unknown = set(fields) - set(FIELDS)
+    unknown = set(fields) - set(cols)
     if unknown:
-        print(f"error: unknown fields {sorted(unknown)}")
+        print(f"error: unknown fields {sorted(unknown)}; allowed: {', '.join(cols)}")
         return 1
+    row.update(pn=pn, description=description, lifecycle="draft")
     row.update(fields)
-    if row["unit_price"] and not row["price_date"]:
+    if row.get("unit_price") and not row.get("price_date"):
         row["price_date"] = date.today().isoformat()
-    rows.append(row)
-    write_csv(PARTS, rows, FIELDS)
+    write_csv(path, rows + [row], cols)
     print(pn)
     return 0
 
