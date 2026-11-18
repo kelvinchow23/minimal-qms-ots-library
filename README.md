@@ -1,11 +1,15 @@
-# parts-library
+# minimal-qms-ots-library
 
 Off-the-shelf (OTS) parts and the naming registers for
 [minimalQMS](https://github.com/kelvinchow23/minimal-qms) product repos.
 
+**Browse and search:** https://kelvinchow23.github.io/minimal-qms-ots-library/ — one tab per prefix,
+search across every field, flags prices older than 90 days. To add or change a part, use
+**Request a part** on the site (a GitHub issue that an agent turns into a reviewed PR).
+
 - **OTS parts only:** manufacturer, MPN, supplier, vendor number, link, and the last known
   price with its date. Custom parts and assemblies live in the product repo that owns them.
-- **Naming registers:** OTS category codes (`categories.csv`) and project codes
+- **Naming registers:** OTS prefix codes (`categories.csv`) and project codes
   (`projects.csv`).
 - **Purchasing upload files generated from a product BOM,** in the purchasing system's
   CSV format, covering both OTS parts and custom parts bought from fabricators.
@@ -15,14 +19,24 @@ Off-the-shelf (OTS) parts and the naming registers for
 
 | Type | Format | Lives in | Example |
 |---|---|---|---|
-| OTS part | `CCC-NNNN` (category) | this library | `FST-0001` M3x8 screws |
+| OTS part | `CCC-NNNN` (prefix) | this library, `parts/CCC.csv` | `HWS-0001` M3x8 screws |
 | Custom part | `PPP-NNNN` (project) | product repo `03_release/parts.csv` | `PRX-0004` housing lid |
 | Custom assembly | `PPP-A-NNNN` (project) | product repo `03_release/parts.csv` | `PRX-A-0003` assembled PCB |
 
-Custom parts and assemblies share one number sequence per project. Category and project
-codes are 3 capital letters and never overlap.
+Custom parts and assemblies share one number sequence per project. Prefix and project
+codes are 3 capital letters. Project codes never start with a part family (`EC`, `HW`, `MC`,
+`CN`), so a number shows at a glance whether a part is off the shelf or custom.
 
-## parts.csv (OTS)
+## OTS prefixes
+
+Prefixes are grouped in families: `EC` electrical, `HW` hardware, `MC` mechanical, `CN`
+consumables. The full list is in `categories.csv`, for example `ECJ` connectors, `ECW`
+wire, `ECP` power, `ECS` safety devices, `HWS` screws, `HWN` nuts, `HWW` washers, `HWD`
+standoffs, `HWB` bearings, `HWP` plumbing.
+
+## parts/CCC.csv (OTS)
+
+One file per prefix, like one tab per prefix in a workbook. Every file has the same columns:
 
 `pn, description, class, manufacturer, mpn, supplier, supplier_pn, link, unit_price,
 currency, price_date, lifecycle, notes`
@@ -47,7 +61,7 @@ Standard-library Python. Run from the repo root.
 
 ```bash
 # OTS part (prints the new PN)
-python tools/new_pn.py OPT "365 nm UV LED, 3535" class=A \
+python tools/new_pn.py ECO "365 nm UV LED, 3535" class=A \
     manufacturer=Lumileds mpn=L1F3-U365200014000 supplier=Mouser \
     supplier_pn=997-L1F3U36520001400 link=https://www.mouser.com/... unit_price=4.12 currency=CAD
 
@@ -64,6 +78,9 @@ python tools/record_order.py out/mouser-2026-11-18.csv Mouser "PO 45012" ../phot
 
 # check the library (also runs in CI), optionally a product's custom parts
 python tools/check.py --repo ../photo-reactor
+
+# build the website locally into _site/ (CI publishes it to GitHub Pages on every merge)
+python tools/build_site.py
 ```
 
 The upload files have exactly the purchasing template's columns: `Item Name`, `Prod No`,
@@ -74,4 +91,4 @@ Quantities are rounded up to whole items, and `--stock stock.csv` subtracts stoc
 
 ## Licence
 
-MIT. OTS category codes adapted from [git-plm/parts](https://github.com/git-plm/parts) (see NOTICE).
+MIT. The `CCC-NNNN` part number format is adapted from [git-plm/parts](https://github.com/git-plm/parts) (see NOTICE).

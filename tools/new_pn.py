@@ -1,17 +1,17 @@
 """Allocate the next free part number.
 
-OTS part (written to this library's parts.csv):
+OTS part (written to this library's parts/CCC.csv):
     python tools/new_pn.py CCC "description" [field=value ...]
 
 Custom part or assembly (written to the product repo's 03_release/parts.csv):
     python tools/new_pn.py PPP "description" --repo PATH [--assembly] [field=value ...]
 
-CCC is a category code (categories.csv). PPP is a project code (projects.csv).
+CCC is a prefix code (categories.csv). PPP is a project code (projects.csv).
 Custom parts are numbered PPP-NNNN and assemblies PPP-A-NNNN; parts and assemblies share
 one number sequence per project, so PRX-0003 and PRX-A-0003 never mean different things.
 
 Examples:
-    python tools/new_pn.py FST "M3x8 SHCS, stainless, pack of 100" class=B \\
+    python tools/new_pn.py HWS "M3x8 SHCS, stainless, pack of 100" class=B \\
         manufacturer=McMaster-Carr mpn=91292A112 supplier=McMaster-Carr \\
         supplier_pn=91292A112 link=https://www.mcmaster.com/91292A112/ unit_price=9.85 currency=USD
     python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print \\
@@ -25,8 +25,8 @@ when a price is given.
 import sys
 from datetime import date
 
-from lib import (CUSTOM_FIELDS, FIELDS, PARTS, PN_RE, categories, load_parts,
-                 load_product_parts, product_parts_path, projects, write_csv)
+from lib import (CUSTOM_FIELDS, FIELDS, PN_RE, categories, load_prefix,
+                 load_product_parts, prefix_path, product_parts_path, projects, write_csv)
 
 
 def next_number(rows, code):
@@ -58,7 +58,7 @@ def main(argv):
         if repo or assembly:
             print("error: OTS parts are single items in this library; --repo/--assembly are for custom parts")
             return 1
-        path, cols, rows = PARTS, FIELDS, load_parts()
+        path, cols, rows = prefix_path(code), FIELDS, load_prefix(code)
         pn = f"{code}-{next_number(rows, code):04d}"
         row = {"class": cats[code]["typical_class"]}
     elif code in projs:
@@ -70,7 +70,7 @@ def main(argv):
         pn = f"{code}-A-{num:04d}" if assembly else f"{code}-{num:04d}"
         row = {"rev": "A", "class": "A"}
     else:
-        print(f"error: {code} is neither a category (categories.csv) nor a project (projects.csv)")
+        print(f"error: {code} is neither a prefix (categories.csv) nor a project (projects.csv)")
         return 1
 
     unknown = set(fields) - set(cols)

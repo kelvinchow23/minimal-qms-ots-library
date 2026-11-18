@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OTS library · minimalQMS</title>
+<style>
+  :root {
+    --bg: #f8fafc; --panel: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0;
+    --accent: #2563eb; --accent-soft: #dbeafe; --warn: #b45309; --warn-soft: #fef3c7;
+    --chip: #f1f5f9; --row-hover: #f8fafc; --ok: #047857;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1120; --panel: #111827; --ink: #e5e7eb; --muted: #94a3b8; --line: #1f2937;
+      --accent: #60a5fa; --accent-soft: #1e3a5f; --warn: #fbbf24; --warn-soft: #3b2f0b;
+      --chip: #1f2937; --row-hover: #172033; --ok: #34d399;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--panel);
+           border-bottom: 1px solid var(--line); padding: 14px 16px 10px; }
+  .top { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0; white-space: nowrap; }
+  .search { flex: 1 1 280px; position: relative; }
+  .search input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--line); border-radius: 8px;
+                  background: var(--bg); color: var(--ink); font-size: 15px; }
+  .search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .request { padding: 9px 14px; border-radius: 8px; background: var(--accent); color: #fff; text-decoration: none;
+             font-weight: 600; white-space: nowrap; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; max-width: 1400px; margin: 0 auto;
+          scrollbar-width: thin; }
+  .fam { display: flex; gap: 4px; padding-right: 8px; margin-right: 4px; border-right: 1px solid var(--line); }
+  .fam:last-child { border-right: 0; }
+  .tab { border: 0; background: var(--chip); color: var(--ink); padding: 5px 9px; border-radius: 999px;
+         cursor: pointer; font: 600 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
+  .tab small { font-weight: 400; color: var(--muted); margin-left: 3px; }
+  .tab.empty { opacity: .45; }
+  .tab.on { background: var(--accent); color: #fff; }
+  .tab.on small { color: #dbeafe; }
+  main { max-width: 1400px; margin: 0 auto; padding: 12px 16px 40px; }
+  .meta { color: var(--muted); font-size: 12.5px; margin: 2px 0 10px; display: flex; justify-content: space-between;
+          gap: 8px; flex-wrap: wrap; }
+  .wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 900px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--panel); position: sticky; top: 0;
+       cursor: pointer; user-select: none; white-space: nowrap; }
+  th .arrow { opacity: .6; }
+  tr:hover td { background: var(--row-hover); }
+  tr:last-child td { border-bottom: 0; }
+  .pn { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 600; white-space: nowrap; }
+  .copy { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 0 0 4px; font-size: 12px; }
+  .copy:hover { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 12.5px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; }
+  a { color: var(--accent); }
+  .price { white-space: nowrap; }
+  .stale { display: inline-block; margin-top: 2px; padding: 0 6px; border-radius: 4px; background: var(--warn-soft);
+           color: var(--warn); font-size: 11.5px; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11.5px; background: var(--chip); }
+  .badge.released { color: var(--ok); }
+  .badge.obsolete { text-decoration: line-through; }
+  mark { background: var(--accent-soft); color: inherit; border-radius: 2px; }
+  .emptystate { padding: 40px 16px; text-align: center; color: var(--muted); }
+  kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+  @media (max-width: 700px) {
+    h1 { font-size: 16px; } .request { padding: 8px 10px; }
+    table { min-width: 0; } thead { display: none; }
+    tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    tr:last-child { border-bottom: 0; }
+    td { display: flex; gap: 10px; border: 0; padding: 3px 12px; }
+    td::before { content: attr(data-label); flex: 0 0 96px; color: var(--muted); font-size: 12px; padding-top: 1px; }
+    td > div, td > span, td > a { min-width: 0; }
+    tr:hover td { background: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>OTS library</h1>
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search part numbers, descriptions, MPNs, suppliers…  ( / )" autocomplete="off">
+    </label>
+    <a class="request" id="request" href="#" target="_blank" rel="noopener">Request a part</a>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+<main>
+  <div class="meta"><span id="count"></span><span id="built"></span></div>
+  <div class="wrap">
+    <table>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="emptystate" id="empty" hidden></div>
+  </div>
+</main>
+<script>
+const REPO = "https://github.com/kelvinchow23/minimal-qms-ots-library";
+const STALE_DAYS = 90;
+const COLS = [
+  ["pn", "Part no."], ["description", "Description"], ["mpn", "Manufacturer / MPN"],
+  ["supplier", "Supplier / Prod No"], ["unit_price", "Unit price"], ["class", "Class"], ["lifecycle", "Status"],
+];
+let data = { prefixes: [], parts: [] }, tab = "ALL", sortKey = "pn", sortDir = 1;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const terms = () => $("q").value.toLowerCase().split(/\s+/).filter(Boolean);
+function hl(text) {
+  let s = esc(text);
+  for (const t of terms()) {
+    const re = new RegExp("(" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig");
+    s = s.replace(re, "<mark>$1</mark>");
+  }
+  return s;
+}
+const prefixOf = (pn) => (pn || "").slice(0, 3);
+const ageDays = (d) => (d ? Math.floor((Date.now() - new Date(d + "T00:00:00")) / 86400000) : null);
+
+function haystack(p) {
+  return [p.pn, p.description, p.manufacturer, p.mpn, p.supplier, p.supplier_pn, p.notes].join(" ").toLowerCase();
+}
+
+function visible() {
+  const ts = terms();
+  return data.parts
+    .filter((p) => tab === "ALL" || prefixOf(p.pn) === tab)
+    .filter((p) => { const h = haystack(p); return ts.every((t) => h.includes(t)); })
+    .sort((a, b) => {
+      const x = sortKey === "unit_price" ? parseFloat(a[sortKey] || "NaN") : (a[sortKey] || "").toLowerCase();
+      const y = sortKey === "unit_price" ? parseFloat(b[sortKey] || "NaN") : (b[sortKey] || "").toLowerCase();
+      if (Number.isNaN(x)) return 1; if (Number.isNaN(y)) return -1;
+      return (x > y ? 1 : x < y ? -1 : 0) * sortDir;
+    });
+}
+
+function renderTabs() {
+  const ts = terms();
+  const match = (p) => { const h = haystack(p); return ts.every((t) => h.includes(t)); };
+  const counts = {};
+  for (const p of data.parts) if (match(p)) counts[prefixOf(p.pn)] = (counts[prefixOf(p.pn)] || 0) + 1;
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const fams = {};
+  for (const c of data.prefixes) (fams[c.family] = fams[c.family] || []).push(c);
+  let html = `<div class="fam"><button class="tab ${tab === "ALL" ? "on" : ""}" data-tab="ALL">All<small>${total}</small></button></div>`;
+  for (const [fam, list] of Object.entries(fams)) {
+    html += `<div class="fam">` + list.map((c) => {
+      const n = counts[c.code] || 0;
+      return `<button class="tab ${tab === c.code ? "on" : ""} ${n ? "" : "empty"}" data-tab="${esc(c.code)}" title="${esc(c.description)}">${esc(c.code)}<small>${n}</small></button>`;
+    }).join("") + `</div>`;
+  }
+  $("tabs").innerHTML = html;
+}
+
+function renderHead() {
+  $("head").innerHTML = COLS.map(([k, label]) =>
+    `<th data-sort="${k}">${label} <span class="arrow">${sortKey === k ? (sortDir > 0 ? "▲" : "▼") : ""}</span></th>`).join("");
+}
+
+function renderRows() {
+  const rows = visible();
+  const pre = data.prefixes.find((c) => c.code === tab);
+  $("count").textContent = `${rows.length} part${rows.length === 1 ? "" : "s"}` + (pre ? ` in ${pre.code} · ${pre.description}` : "");
+  $("rows").innerHTML = rows.map((p) => {
+    const age = ageDays(p.price_date);
+    const stale = p.unit_price && age !== null && age > STALE_DAYS;
+    const prod = p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${hl(p.supplier_pn || "link")}</a>` : hl(p.supplier_pn);
+    return `<tr>
+      <td data-label="Part no."><span><span class="pn">${hl(p.pn)}</span><button class="copy" data-copy="${esc(p.pn)}" title="Copy part number">⧉</button></span></td>
+      <td data-label="Description"><div>${hl(p.description)}${p.notes ? `<div class="sub">${hl(p.notes)}</div>` : ""}</div></td>
+      <td data-label="Manufacturer"><div>${hl(p.manufacturer)}<div class="mono">${hl(p.mpn)}</div></div></td>
+      <td data-label="Supplier"><div>${hl(p.supplier)}<div class="mono">${prod}</div></div></td>
+      <td data-label="Unit price" class="price"><div>${p.unit_price ? `${esc(p.unit_price)} ${esc(p.currency)}<div class="sub">${esc(p.price_date)}</div>` : `<span class="sub">–</span>`}
+        ${stale ? `<div class="stale">${age} days old</div>` : ""}</div></td>
+      <td data-label="Class">${esc(p.class)}</td>
+      <td data-label="Status"><span class="badge ${esc(p.lifecycle)}">${esc(p.lifecycle)}</span></td>
+    </tr>`;
+  }).join("");
+  const empty = $("empty");
+  empty.hidden = rows.length > 0;
+  if (!rows.length) {
+    empty.innerHTML = data.parts.length === 0
+      ? `The library has no parts yet. Use <b>Request a part</b> to add the first one.`
+      : `No parts match “${esc($("q").value)}”${tab !== "ALL" ? ` in ${esc(tab)} — <a href="#" data-tab="ALL">search all prefixes</a>` : ""}.`;
+  }
+}
+
+function render() { renderTabs(); renderHead(); renderRows(); saveHash(); }
+function saveHash() {
+  const h = new URLSearchParams();
+  if (tab !== "ALL") h.set("tab", tab);
+  if ($("q").value) h.set("q", $("q").value);
+  history.replaceState(null, "", h.toString() ? "#" + h : location.pathname);
+}
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tab]");
+  if (t) { e.preventDefault(); tab = t.dataset.tab; render(); return; }
+  const s = e.target.closest("[data-sort]");
+  if (s) { const k = s.dataset.sort; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; render(); return; }
+  const c = e.target.closest("[data-copy]");
+  if (c) { navigator.clipboard?.writeText(c.dataset.copy); c.textContent = "✓"; setTimeout(() => (c.textContent = "⧉"), 900); }
+});
+$("q").addEventListener("input", render);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
+  if (e.key === "Escape") { $("q").value = ""; render(); }
+});
+$("request").href = `${REPO}/issues/new?template=part-request.md`;
+
+function readHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  tab = h.get("tab") || "ALL";
+  $("q").value = h.get("q") || "";
+}
+window.addEventListener("hashchange", () => { readHash(); render(); });
+
+fetch("data.json", { cache: "no-store" }).then((r) => r.json()).then((d) => {
+  data = d;
+  readHash();
+  $("built").innerHTML = `Updated ${esc(d.built)}${d.commit ? ` · <a href="${REPO}/commit/${esc(d.commit)}">${esc(d.commit)}</a>` : ""} · <a href="${REPO}">source</a>`;
+  render();
+}).catch(() => { $("empty").hidden = false; $("empty").textContent = "Could not load data.json."; });
+</script>
+</body>
+</html>

@@ -1,23 +1,23 @@
-"""Shared helpers for parts-library tools. Standard library only.
+"""Shared helpers for minimal-qms-ots-library tools. Standard library only.
 
 Part numbers (minimalQMS SOP-002):
-  OTS part         CCC-NNNN     CCC = category code (categories.csv)   kept in this library
-  Custom part      PPP-NNNN     PPP = project code (projects.csv)      kept in the product repo
-  Custom assembly  PPP-A-NNNN                                          kept in the product repo
+  OTS part         CCC-NNNN     CCC = prefix code (categories.csv)    kept in parts/CCC.csv
+  Custom part      PPP-NNNN     PPP = project code (projects.csv)     kept in the product repo
+  Custom assembly  PPP-A-NNNN                                         kept in the product repo
 """
 import csv
 import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PARTS = os.path.join(ROOT, "parts.csv")
+PARTS_DIR = os.path.join(ROOT, "parts")
 CATEGORIES = os.path.join(ROOT, "categories.csv")
 PROJECTS = os.path.join(ROOT, "projects.csv")
 PRODUCT_PARTS = os.path.join("03_release", "parts.csv")
 
 PN_RE = re.compile(r"^(?P<code>[A-Z]{3})-(?P<asm>A-)?(?P<num>\d{4})$")
 
-# OTS parts in this library
+# OTS parts in this library (same columns in every parts/CCC.csv)
 FIELDS = [
     "pn", "description", "class", "manufacturer", "mpn", "supplier", "supplier_pn",
     "link", "unit_price", "currency", "price_date", "lifecycle", "notes",
@@ -43,8 +43,25 @@ def write_csv(path, rows, fields):
             w.writerow({k: r.get(k, "") for k in fields})
 
 
-def load_parts(path=PARTS):
-    return read_csv(path)
+def prefix_path(code):
+    return os.path.join(PARTS_DIR, f"{code}.csv")
+
+
+def load_prefix(code):
+    path = prefix_path(code)
+    return read_csv(path) if os.path.exists(path) else []
+
+
+def prefix_files():
+    return sorted(n for n in os.listdir(PARTS_DIR) if n.endswith(".csv"))
+
+
+def load_parts():
+    """All OTS parts, from every parts/CCC.csv."""
+    rows = []
+    for name in prefix_files():
+        rows.extend(read_csv(os.path.join(PARTS_DIR, name)))
+    return rows
 
 
 def parts_by_pn(rows):
