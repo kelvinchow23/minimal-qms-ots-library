@@ -1,4 +1,4 @@
-name: check parts library
+name: check OTS library
 on:
   pull_request:
   push:

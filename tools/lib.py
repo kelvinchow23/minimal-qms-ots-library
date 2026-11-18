@@ -1,4 +1,4 @@
-"""Shared helpers for parts-library tools. Standard library only.
+"""Shared helpers for minimal-qms-ots-library tools. Standard library only.
 
 Part numbers (minimalQMS SOP-002):
   OTS part         CCC-NNNN     CCC = prefix code (categories.csv)    kept in parts/CCC.csv

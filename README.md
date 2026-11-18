@@ -1,9 +1,9 @@
-# parts-library
+# minimal-qms-ots-library
 
 Off-the-shelf (OTS) parts and the naming registers for
 [minimalQMS](https://github.com/kelvinchow23/minimal-qms) product repos.
 
-**Browse and search:** https://kelvinchow23.github.io/parts-library/ — one tab per prefix,
+**Browse and search:** https://kelvinchow23.github.io/minimal-qms-ots-library/ — one tab per prefix,
 search across every field, flags prices older than 90 days. To add or change a part, use
 **Request a part** on the site (a GitHub issue that an agent turns into a reviewed PR).
 

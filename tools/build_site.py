@@ -1,4 +1,4 @@
-"""Build the parts-library website into _site/ (published to GitHub Pages by CI).
+"""Build the OTS library website into _site/ (published to GitHub Pages by CI).
 
 Usage: python tools/build_site.py [OUT_DIR]
 

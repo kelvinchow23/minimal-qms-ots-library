@@ -5,7 +5,7 @@ title: "Part: <short description>"
 labels: part-request
 ---
 
-<!-- An agent turns this request into a PR on the parts library; a human merges it. -->
+<!-- An agent turns this request into a PR on the OTS library; a human merges it. -->
 
 ## Link(s)
 <!-- Supplier product page(s), e.g. Mouser, Digi-Key or McMaster-Carr. One per line. -->
