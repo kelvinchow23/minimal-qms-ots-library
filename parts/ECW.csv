@@ -1,1 +1,2 @@
 pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,currency,price_date,lifecycle,notes
+ECW-0001,"STEMMA QT / Qwiic JST-SH 4-pin cable, 100 mm",B,Adafruit,4210,DigiKey,1528-4210-ND,https://www.digikey.com/en/products/detail/adafruit-industries-llc/4210/10230021,0.95,USD,2026-11-21,draft,Also Mouser 485-4210. Price is Adafruit's list price
