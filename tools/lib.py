@@ -13,7 +13,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PARTS_DIR = os.path.join(ROOT, "parts")
 CATEGORIES = os.path.join(ROOT, "categories.csv")
 PROJECTS = os.path.join(ROOT, "projects.csv")
-PRODUCT_PARTS = os.path.join("03_release", "parts.csv")
+PRODUCT_PARTS = os.path.join("03_build_package", "parts.csv")
 
 PN_RE = re.compile(r"^(?P<code>[A-Z]{3})-(?P<asm>A-)?(?P<num>\d{4})$")
 
