@@ -5,7 +5,7 @@ Usage:
                                 [--stock STOCK.csv] [--cart-link SUPPLIER=URL ...] [--skip-class C]
 
 BOM.csv is a product repo's bom.csv (parent_pn, parent_rev, pn, qty, ...). Parts are looked
-up in this library (OTS, parts/CCC.csv) and in the product repo's 03_release/parts.csv (custom). The
+up in this library (OTS, parts/CCC.csv) and in the product repo's 03_build_package/parts.csv (custom). The
 product repo defaults to the folder above the BOM's folder. The BOM is expanded from TOP_PN,
 multiplying quantities through sub-assemblies:
   - a PN with a supplier is ordered as one item (even if it has a BOM, e.g. a PCB ordered

@@ -3,7 +3,7 @@
 OTS part (written to this library's parts/CCC.csv):
     python tools/new_pn.py CCC "description" [field=value ...]
 
-Custom part or assembly (written to the product repo's 03_release/parts.csv):
+Custom part or assembly (written to the product repo's 03_build_package/parts.csv):
     python tools/new_pn.py PPP "description" --repo PATH [--assembly] [field=value ...]
 
 CCC is a prefix code (categories.csv). PPP is a project code (projects.csv).
