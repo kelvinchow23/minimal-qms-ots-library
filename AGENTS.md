@@ -4,6 +4,23 @@ Instructions for any AI agent working in this repo. `CLAUDE.md` imports this fil
 This repo follows [minimalQMS](https://github.com/kelvinchow23/minimal-qms); its hard
 rules apply here (never commit to `main`, never merge or approve, never backdate).
 
+## Related repos
+
+The minimalQMS repos are cloned side by side in one parent folder. Agent sessions in
+different repos do not share memory; they coordinate through these files. Local folder
+names may differ from the GitHub names (e.g. `minimal-qms` may be cloned as `mini-qms-ai`).
+
+| Repo | What to read there |
+|---|---|
+| `minimal-qms` | `docs/INTERFACES.md`: the authority on shared names, IDs, columns and the product repo layout. `docs/ROADMAP.md`: what is planned. `sops/SOP-002-*` (part numbers) and `sops/SOP-005-*` (purchasing) govern this library. |
+| `minimal-qms-ots-library` (this repo) | OTS parts, project codes, part number allocation and purchasing tools. |
+| `minimal-qms-playbook` *(planned)* | Work instructions and agent skills (CAD, ECAD, assembly instructions, purchasing). |
+
+- Read the relevant file in the other repo before changing anything that crosses repos.
+- A change to a column or name that product repos rely on (e.g. the `parts.csv` header)
+  also updates `docs/INTERFACES.md` and the SOP that cites it in `minimal-qms`, through a
+  separate PR there.
+
 ## Rules for this repo
 
 1. **This library holds OTS parts only.** Custom parts and assemblies (`PPP-NNNN`,
