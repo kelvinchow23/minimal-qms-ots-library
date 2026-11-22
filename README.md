@@ -20,8 +20,8 @@ search across every field, flags prices older than 90 days. To add or change a p
 | Type | Format | Lives in | Example |
 |---|---|---|---|
 | OTS part | `CCC-NNNN` (prefix) | this library, `parts/CCC.csv` | `HWS-0001` M3x8 screws |
-| Custom part | `PPP-NNNN` (project) | product repo `03_release/parts.csv` | `PRX-0004` housing lid |
-| Custom assembly | `PPP-A-NNNN` (project) | product repo `03_release/parts.csv` | `PRX-A-0003` assembled PCB |
+| Custom part | `PPP-NNNN` (project) | product repo `03_build_package/parts.csv` | `PRX-0004` housing lid |
+| Custom assembly | `PPP-A-NNNN` (project) | product repo `03_build_package/parts.csv` | `PRX-A-0003` assembled PCB |
 
 Custom parts and assemblies share one number sequence per project. Prefix and project
 codes are 3 capital letters. Project codes never start with a part family (`EC`, `HW`, `MC`,
@@ -65,13 +65,13 @@ python tools/new_pn.py ECO "365 nm UV LED, 3535" class=A \
     manufacturer=Lumileds mpn=L1F3-U365200014000 supplier=Mouser \
     supplier_pn=997-L1F3U36520001400 link=https://www.mouser.com/... unit_price=4.12 currency=CAD
 
-# custom part or assembly, written to the product repo's 03_release/parts.csv
+# custom part or assembly, written to the product repo's 03_build_package/parts.csv
 python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print "source=Fusion: Housing lid v12"
 python tools/new_pn.py PRX "LED driver board, assembled" --repo ../photo-reactor --assembly \
     make=fab supplier=JLCPCB link=https://jlcpcb.com
 
 # purchasing upload files for 3 units of a product (one CSV per supplier)
-python tools/requisition.py ../photo-reactor/03_release/bom.csv PRX-A-0001 3 --out out/
+python tools/requisition.py ../photo-reactor/03_build_package/bom.csv PRX-A-0001 3 --out out/
 
 # after ordering: record the order in the product repo
 python tools/record_order.py out/mouser-2026-11-18.csv Mouser "PO 45012" ../photo-reactor

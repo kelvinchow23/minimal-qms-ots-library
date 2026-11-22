@@ -2,7 +2,7 @@
 
 Usage:
     python tools/check.py                      # library: parts/*.csv, categories.csv, projects.csv
-    python tools/check.py --repo PRODUCT_REPO  # also the product's 03_release/parts.csv
+    python tools/check.py --repo PRODUCT_REPO  # also the product's 03_build_package/parts.csv
 """
 import os
 import sys
