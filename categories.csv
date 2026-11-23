@@ -1,27 +1,20 @@
 code,family,description,typical_class
 ECJ,EC,Connectors and headers,B
-ECW,EC,Wire and cable,B
+ECW,EC,Wire and cable (incl. heat shrink),B
 ECP,EC,Power supplies and converters,A
 ECS,EC,Safety devices (fuses / breakers / interlocks / e-stops),A
-ECO,EC,LEDs and optoelectronics,A
-ECI,EC,Integrated circuits,A
-ECM,EC,Modules and ready-made boards (e.g. Raspberry Pi Pico),A
-ECC,EC,Capacitors,B
-ECL,EC,Inductors and ferrites,B
-ECD,EC,Diodes,B
-ECT,EC,Transistors and MOSFETs,B
-ECX,EC,Other electrical (switches / relays / sensors / resistors),B
-HWS,HW,Screws and bolts,B
-HWN,HW,Nuts,B
+ECM,EC,Modules and ready-made boards (e.g. Raspberry Pi / sensor breakout boards),A
+ECE,EC,Electronic components bought loose (ICs / passives / diodes / transistors / LEDs / sensor chips),B
+ECA,EC,Motors and actuators,A
+ECF,EC,Fans and thermal parts (heatsinks / pads),B
+ECX,EC,Other electrical (switches / relays / probes),B
+HWB,HW,Screws and bolts,B
+HWN,HW,Nuts and inserts (heat-set / threaded),B
 HWW,HW,Washers,B
-HWD,HW,Standoffs and spacers,B
-HWI,HW,Inserts (heat-set / threaded),B
-HWB,HW,Bearings and bushings,B
+HWS,HW,Spacers and standoffs,B
+HWM,HW,Motion (bearings / bushings / rails / belts / pulleys / shafts / lead screws / couplers),B
 HWP,HW,Plumbing: fittings / tubing / valves,B
-HWX,HW,Other hardware,B
-MCE,MC,Extrusion and structural profiles,B
-MCF,MC,Fans and thermal parts (heatsinks / pads),B
-MCX,MC,Other mechanical,B
-CNA,CN,Adhesives and tapes,C
-CNS,CN,Solder and flux,C
-CNX,CN,Other consumables,C
+HWA,HW,Adhesives and sealants (incl. liquid electrical tape / potting),C
+HWT,HW,Tape,C
+HWF,HW,3D-printer filament and resin,C
+HWX,HW,Other hardware (extrusion / brackets / corner joints / sheet / solder),B

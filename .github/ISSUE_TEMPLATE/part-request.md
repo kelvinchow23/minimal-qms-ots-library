@@ -16,12 +16,12 @@ labels: part-request
 
 
 ## Prefix (if known)
-<!-- e.g. HWS screws, HWN nuts, ECO LEDs. See categories.csv. Leave blank if unsure. -->
+<!-- e.g. HWB screws, HWN nuts, ECM boards. See categories.csv. Leave blank if unsure. -->
 
 
 ## Add or change
 - [ ] Add a new part
-- [ ] Change an existing part: <!-- part number, e.g. HWS-0001 -->
+- [ ] Change an existing part: <!-- part number, e.g. HWB-0001 -->
 
 ## Notes
 <!-- Preferred supplier, quantity per pack, alternatives, anything else. -->

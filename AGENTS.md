@@ -29,14 +29,14 @@ names may differ from the GitHub names (e.g. `minimal-qms` may be cloned as `min
    never reuse or renumber a PN, and never delete a row; set `lifecycle: obsolete` instead.
    OTS parts go in `parts/CCC.csv`, one file per prefix. A new project needs a line in
    `projects.csv` first; codes are 3 capital letters and must not start with a part
-   family (`EC`, `HW`, `MC`, `CN`). A new prefix needs a line in `categories.csv` and an
+   family (`EC`, `HW`). A new prefix needs a line in `categories.csv` and an
    empty `parts/CCC.csv` with the standard header.
 3. **Prices always carry a date.** When updating `unit_price`, also set `price_date` to the
    date the price was checked, and `currency`.
 4. **Prefer the supplier's part number** for `supplier_pn` ("Prod No" on uploads). Use the
    MPN when the supplier has none.
 5. **Run `python tools/check.py` before finishing** (add `--repo` when custom parts changed) and report its result.
-6. Commit format: `[PN] summary`, e.g. `[ECO-0001] add 365 nm LED`, or `[LIB] summary` for
+6. Commit format: `[PN] summary`, e.g. `[ECE-0001] add 365 nm LED`, or `[LIB] summary` for
    tools and repo-wide changes.
 
 7. **Canadian English spelling** in prose (organization, colour, centre, licence as the
