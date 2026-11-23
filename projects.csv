@@ -1,2 +1,2 @@
 code,name,repo,created,notes
-LSN,Lab sensor node,minimal-qms-hello-pilot-lab-sensor-node,2026-11-23,"minimalQMS pilot product; G0 approved 2026-11-23 (DR-001); product repo is local only, no remote yet"
+LSN,Lab sensor node,https://github.com/kelvinchow23/minimal-qms-hello-pilot-lab-sensor-node,2026-11-23,"minimalQMS pilot product; G0 approved 2026-11-23 (DR-001)"
