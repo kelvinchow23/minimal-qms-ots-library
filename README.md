@@ -19,20 +19,30 @@ search across every field, flags prices older than 90 days. To add or change a p
 
 | Type | Format | Lives in | Example |
 |---|---|---|---|
-| OTS part | `CCC-NNNN` (prefix) | this library, `parts/CCC.csv` | `HWS-0001` M3x8 screws |
+| OTS part | `CCC-NNNN` (prefix) | this library, `parts/CCC.csv` | `HWB-0001` M3x8 screws |
 | Custom part | `PPP-NNNN` (project) | product repo `03_build_package/parts.csv` | `PRX-0004` housing lid |
 | Custom assembly | `PPP-A-NNNN` (project) | product repo `03_build_package/parts.csv` | `PRX-A-0003` assembled PCB |
 
 Custom parts and assemblies share one number sequence per project. Prefix and project
-codes are 3 capital letters. Project codes never start with a part family (`EC`, `HW`, `MC`,
-`CN`), so a number shows at a glance whether a part is off the shelf or custom.
+codes are 3 capital letters. Project codes never start with a part family (`EC`, `HW`),
+so a number shows at a glance whether a part is off the shelf or custom.
 
 ## OTS prefixes
 
-Prefixes are grouped in families: `EC` electrical, `HW` hardware, `MC` mechanical, `CN`
-consumables. The full list is in `categories.csv`, for example `ECJ` connectors, `ECW`
-wire, `ECP` power, `ECS` safety devices, `HWS` screws, `HWN` nuts, `HWW` washers, `HWD`
-standoffs, `HWB` bearings, `HWP` plumbing.
+Prefixes are grouped in two families, `EC` electrical and `HW` hardware. The full list is
+in `categories.csv`:
+
+- **EC:** `ECJ` connectors (J for jack), `ECW` wire, `ECP` power, `ECS` safety devices,
+  `ECM` modules and boards, `ECE` electronic components bought loose, `ECA` motors and
+  actuators, `ECF` fans and thermal, `ECX` other electrical.
+- **HW:** `HWB` screws and bolts, `HWN` nuts and inserts, `HWW` washers, `HWS` spacers and
+  standoffs, `HWM` motion (bearings, belts, pulleys, shafts), `HWP` plumbing, `HWA`
+  adhesives and sealants, `HWT` tape, `HWF` 3D-printer filament and resin, `HWX` other
+  hardware (extrusion, brackets).
+
+Boards and breakouts (a Raspberry Pi, a sensor board) are `ECM`. Chips and passives on a
+custom PCB are not numbered here: the PCB is a custom assembly in the product repo, and
+its KiCad BOM keeps their MPN and LCSC numbers. Use `ECE` only for components bought loose.
 
 ## parts/CCC.csv (OTS)
 
@@ -61,7 +71,7 @@ Standard-library Python. Run from the repo root.
 
 ```bash
 # OTS part (prints the new PN)
-python tools/new_pn.py ECO "365 nm UV LED, 3535" class=A \
+python tools/new_pn.py ECE "365 nm UV LED, 3535" class=A \
     manufacturer=Lumileds mpn=L1F3-U365200014000 supplier=Mouser \
     supplier_pn=997-L1F3U36520001400 link=https://www.mouser.com/... unit_price=4.12 currency=CAD
 

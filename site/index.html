@@ -35,6 +35,8 @@
           scrollbar-width: thin; }
   .fam { display: flex; gap: 4px; padding-right: 8px; margin-right: 4px; border-right: 1px solid var(--line); }
   .fam:last-child { border-right: 0; }
+  .famname { align-self: center; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+             letter-spacing: .04em; margin-right: 2px; white-space: nowrap; }
   .tab { border: 0; background: var(--chip); color: var(--ink); padding: 5px 9px; border-radius: 999px;
          cursor: pointer; font: 600 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
   .tab small { font-weight: 400; color: var(--muted); margin-left: 3px; }
@@ -104,6 +106,7 @@
 <script>
 const REPO = "https://github.com/kelvinchow23/minimal-qms-ots-library";
 const STALE_DAYS = 90;
+const FAMILIES = { EC: "Electrical", HW: "Hardware" };
 const COLS = [
   ["pn", "Part no."], ["description", "Description"], ["mpn", "Manufacturer / MPN"],
   ["supplier", "Supplier / Prod No"], ["unit_price", "Unit price"], ["class", "Class"], ["lifecycle", "Status"],
@@ -151,7 +154,7 @@ function renderTabs() {
   for (const c of data.prefixes) (fams[c.family] = fams[c.family] || []).push(c);
   let html = `<div class="fam"><button class="tab ${tab === "ALL" ? "on" : ""}" data-tab="ALL">All<small>${total}</small></button></div>`;
   for (const [fam, list] of Object.entries(fams)) {
-    html += `<div class="fam">` + list.map((c) => {
+    html += `<div class="fam"><span class="famname" title="${esc(fam)}">${esc(FAMILIES[fam] || fam)}</span>` + list.map((c) => {
       const n = counts[c.code] || 0;
       return `<button class="tab ${tab === c.code ? "on" : ""} ${n ? "" : "empty"}" data-tab="${esc(c.code)}" title="${esc(c.description)}">${esc(c.code)}<small>${n}</small></button>`;
     }).join("") + `</div>`;

@@ -11,7 +11,7 @@ Custom parts are numbered PPP-NNNN and assemblies PPP-A-NNNN; parts and assembli
 one number sequence per project, so PRX-0003 and PRX-A-0003 never mean different things.
 
 Examples:
-    python tools/new_pn.py HWS "M3x8 SHCS, stainless, pack of 100" class=B \\
+    python tools/new_pn.py HWB "M3x8 SHCS, stainless, pack of 100" class=B \\
         manufacturer=McMaster-Carr mpn=91292A112 supplier=McMaster-Carr \\
         supplier_pn=91292A112 link=https://www.mcmaster.com/91292A112/ unit_price=9.85 currency=USD
     python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print \\
