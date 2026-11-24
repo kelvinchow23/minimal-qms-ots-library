@@ -91,6 +91,9 @@ python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print "sou
 python tools/new_pn.py PRX "LED driver board, assembled" --repo ../photo-reactor --assembly \
     make=fab supplier=JLCPCB link=https://jlcpcb.com
 
+# costed BOM for 3 units: one row per part, cost per piece in its own currency and in CAD
+python tools/bom_cost.py ../photo-reactor/03_build_package/bom.csv PRX-A-0001 3
+
 # purchasing upload files for 3 units of a product (one CSV per supplier)
 python tools/requisition.py ../photo-reactor/03_build_package/bom.csv PRX-A-0001 3 --out out/
 
@@ -103,6 +106,22 @@ python tools/check.py --repo ../photo-reactor
 # build the website locally into _site/ (CI publishes it to GitHub Pages on every merge)
 python tools/build_site.py
 ```
+
+### Costed BOM
+
+`bom_cost.py` expands the BOM like `requisition.py` and writes one row per part, one value
+per cell, so it pastes straight into a spreadsheet:
+
+`PN, Description, Qty per unit, Qty, Supplier, Supplier PN, Unit cost, Currency,
+Unit cost (CAD), Extended (CAD), Price date, Link`, then a `TOTAL` row in CAD.
+
+Costs are per piece (packs only matter when ordering). Prices stay in the supplier's own
+currency in the library; the BOM converts them with `rates.csv`
+(`currency, cad_per_unit, rate_date, source`, e.g. the Bank of Canada daily rate). Like
+prices, a rate always carries its date: the tool warns when a rate is over 30 days old or a
+price over 90 days, and `check.py` fails if a currency used by any part has no rate.
+
+### Purchasing upload files
 
 The upload files have exactly the purchasing template's columns: `Item Name`, `Prod No`,
 `# of Items`, `Price (Before Tax - Original Currency)`, `Item Link`. `price_date` is not
