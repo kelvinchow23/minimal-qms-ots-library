@@ -80,6 +80,9 @@ def check_library(errors):
                         errors.append(f"{where}: released part needs {k}")
                 if not (r.get("supplier_pn") or r.get("mpn")):
                     errors.append(f"{where}: released part needs supplier_pn or mpn")
+            pq = r.get("pack_qty", "")
+            if not (pq.isdigit() and int(pq) >= 1):
+                errors.append(f"{where}: pack_qty must be a whole number, 1 or more")
             if r.get("supplier", "").strip().lower() == "mcmaster-carr" and (
                     r.get("manufacturer") or r.get("mpn")):
                 errors.append(f"{where}: McMaster-Carr parts leave manufacturer and mpn blank")

@@ -7,6 +7,7 @@ REQUISITION.csv is a file produced by requisition.py (and uploaded to the purcha
 system). Each row is mapped back to its internal PN through the library's parts/CCC.csv files and
 the product's 03_build_package/parts.csv (supplier_pn, then mpn). Rows are appended to PRODUCT_REPO/purchasing/purchases.csv with new P-nnnn line IDs,
 and the requisition file is copied to PRODUCT_REPO/purchasing/requisitions/ORDER_REF.csv.
+qty in purchases.csv is in pieces: a line of 2 packs of a pack_qty 100 part records 200.
 The order date defaults to today; use the actual order date, never a backdated one.
 """
 import os
@@ -55,10 +56,12 @@ def main(argv):
         if p is None:
             print(f"error: Prod No {prod_no} ({row['Item Name']}) has no {supplier} entry in the library or the product")
             return 1
+        items, pack = int(float(row["# of Items"])), int(p.get("pack_qty") or 1)
         new.append({
             "line_id": f"P-{nxt:04d}", "pn": p["pn"], "description": p["description"],
-            "qty": row["# of Items"], "supplier": supplier, "link": row["Item Link"],
+            "qty": items * pack, "supplier": supplier, "link": row["Item Link"],
             "order_ref": order_ref, "order_date": order_date, "inspection": "",
+            "notes": f"{items} pack(s) of {pack}" if pack > 1 else "",
         })
         nxt += 1
 
