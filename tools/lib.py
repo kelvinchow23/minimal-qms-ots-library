@@ -20,9 +20,12 @@ PN_RE = re.compile(r"^(?P<code>[A-Z]{3})-(?P<asm>A-)?(?P<num>\d{4})$")
 # OTS parts in this library (same columns in every parts/CCC.csv)
 FIELDS = [
     "pn", "description", "class", "manufacturer", "mpn", "supplier", "supplier_pn",
-    "link", "unit_price", "currency", "price_date", "lifecycle", "notes",
+    "link", "unit_price", "pack_qty", "currency", "price_date", "lifecycle", "notes",
 ]
+# unit_price is per piece; pack_qty is how many pieces one orderable item holds (1 if sold
+# singly). The price of one orderable item is unit_price x pack_qty.
 # Custom parts and assemblies in a product repo; the purchasing columns match FIELDS
+# (no pack_qty: a custom part is ordered one piece per item)
 CUSTOM_FIELDS = [
     "pn", "rev", "description", "class", "lifecycle", "make", "source", "drawing",
     "supplier", "supplier_pn", "link", "unit_price", "currency", "price_date", "notes",

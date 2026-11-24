@@ -15,13 +15,16 @@ multiplying quantities through sub-assemblies:
     as made in-house and not ordered;
   - anything else is an error.
 
-STOCK.csv (optional) has columns pn, qty_on_hand; stock is subtracted.
+STOCK.csv (optional) has columns pn, qty_on_hand (pieces); stock is subtracted.
+Parts sold in packs (pack_qty > 1) are ordered in whole packs: 12 screws from a pack of 100
+is 1 item.
 --cart-link SUPPLIER=URL puts one cart link on every row for that supplier.
 
 Output: DIR/<supplier>-<YYYY-MM-DD>.csv with exactly the purchasing template's columns:
   Item Name, Prod No, # of Items, Price (Before Tax - Original Currency), Item Link
-Prod No is the supplier part number, or the MPN if none. Price is the unit price from
-parts.csv; price_date is not included. A warning is printed for missing prices and
+Prod No is the supplier part number, or the MPN if none. # of Items counts packs, and
+Price is the price of one item (unit_price x pack_qty); Item Name ends ", pack of N" for
+packs. price_date is not included. A warning is printed for missing prices and
 prices older than 90 days.
 """
 import csv
@@ -109,10 +112,14 @@ def main(argv):
         p = parts[pn]
         if p.get("class", "").upper() in opts["skip"]:
             continue
-        qty = math.ceil(need[pn] - stock.get(pn, 0))
-        if qty <= 0:
+        pieces = math.ceil(need[pn] - stock.get(pn, 0))
+        if pieces <= 0:
             continue
+        pack = int(p.get("pack_qty") or 1)
+        qty = math.ceil(pieces / pack)  # orderable items (packs)
         price = p.get("unit_price", "")
+        if price:
+            price = f"{float(price) * pack:.4f}".rstrip("0").rstrip(".")  # price per pack
         if not price:
             warnings.append(f"{pn}: no price")
         elif p.get("price_date"):
@@ -121,7 +128,7 @@ def main(argv):
                 warnings.append(f"{pn}: price is {age} days old ({p['price_date']})")
         supplier = p["supplier"]
         by_supplier[supplier].append({
-            "Item Name": p.get("description", ""),
+            "Item Name": p.get("description", "") + (f", pack of {pack}" if pack > 1 else ""),
             "Prod No": p.get("supplier_pn") or p.get("mpn", ""),
             "# of Items": qty,
             "Price (Before Tax - Original Currency)": price,
