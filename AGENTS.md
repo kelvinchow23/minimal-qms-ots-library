@@ -14,7 +14,8 @@ names may differ from the GitHub names (e.g. `minimal-qms` may be cloned as `min
 |---|---|
 | `minimal-qms` | `docs/INTERFACES.md`: the authority on shared names, IDs, columns and the product repo layout. `docs/ROADMAP.md`: what is planned. `sops/SOP-002-*` (part numbers) and `sops/SOP-005-*` (purchasing) govern this library. |
 | `minimal-qms-ots-library` (this repo) | OTS parts, project codes, part number allocation and purchasing tools. |
-| `minimal-qms-playbook` *(planned)* | Work instructions and agent skills (CAD, ECAD, assembly instructions, purchasing). |
+| `minimal-qms-playbook` | Public work instructions and agent skills, `skills/<name>/SKILL.md` (Fusion, Onshape, KiCad, assembly instructions, purchasing). Read the relevant skill before doing that kind of work. |
+| `minimal-qms-playbook-private` | Private organization add-ons, `skills/<name>/<name>-private-addon.md`. Not every user has it. Never copy its contents into a public repo. |
 
 - Read the relevant file in the other repo before changing anything that crosses repos.
 - A change to a column or name that product repos rely on (e.g. the `parts.csv` header)
@@ -32,9 +33,14 @@ names may differ from the GitHub names (e.g. `minimal-qms` may be cloned as `min
    family (`EC`, `HW`). A new prefix needs a line in `categories.csv` and an
    empty `parts/CCC.csv` with the standard header.
 3. **Prices always carry a date.** When updating `unit_price`, also set `price_date` to the
-   date the price was checked, and `currency`.
+   date the price was checked, and `currency`. `unit_price` is per piece; set `pack_qty`
+   for parts sold in packs. Exchange rates in `rates.csv` follow the same rule: update
+   `rate_date` with `cad_per_unit` (Bank of Canada daily rate).
 4. **Prefer the supplier's part number** for `supplier_pn` ("Prod No" on uploads). Use the
    MPN when the supplier has none.
+   **McMaster-Carr hides the manufacturer and MPN: for a McMaster part, leave
+   `manufacturer` and `mpn` blank** (never fill them with "McMaster-Carr" or the McMaster
+   number). The McMaster number goes in `supplier_pn` only. `check.py` enforces this.
 5. **Run `python tools/check.py` before finishing** (add `--repo` when custom parts changed) and report its result.
 6. Commit format: `[PN] summary`, e.g. `[ECE-0001] add 365 nm LED`, or `[LIB] summary` for
    tools and repo-wide changes.
@@ -50,5 +56,7 @@ names may differ from the GitHub names (e.g. `minimal-qms` may be cloned as `min
   supplier data and today's price.
 - "Make the order files for 3 photoreactors": run `requisition.py` on the product BOM and
   report any warnings (missing or old prices).
+- "Cost the photoreactor BOM for 3 units": run `bom_cost.py` and report the CAD total and
+  any warnings (missing or old prices, old rates).
 - "I placed the Mouser order, it's PO 45012": run `record_order.py` into the product repo,
   on a branch in that repo.

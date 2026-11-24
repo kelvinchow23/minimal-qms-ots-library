@@ -11,13 +11,16 @@ Custom parts are numbered PPP-NNNN and assemblies PPP-A-NNNN; parts and assembli
 one number sequence per project, so PRX-0003 and PRX-A-0003 never mean different things.
 
 Examples:
-    python tools/new_pn.py HWB "M3x8 SHCS, stainless, pack of 100" class=B \\
-        manufacturer=McMaster-Carr mpn=91292A112 supplier=McMaster-Carr \\
-        supplier_pn=91292A112 link=https://www.mcmaster.com/91292A112/ unit_price=9.85 currency=USD
+    python tools/new_pn.py HWB "Screw, M3 x 8 mm, socket head cap, 18-8 stainless" class=B \\
+        supplier=McMaster-Carr supplier_pn=91292A112 link=https://www.mcmaster.com/91292A112/ \\
+        unit_price=0.0985 pack_qty=100 currency=USD
     python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print \\
         "source=Fusion: Photoreactor/Housing lid v12"
     python tools/new_pn.py PRX "LED driver board, assembled" --repo ../photo-reactor --assembly \\
         make=fab supplier=JLCPCB link=https://jlcpcb.com
+
+unit_price is the price of one piece. For a part sold in packs, set pack_qty (pieces per
+pack, default 1). McMaster-Carr parts leave manufacturer and mpn blank.
 
 New rows start as lifecycle=draft (custom parts also rev=A). price_date defaults to today
 when a price is given.
@@ -60,7 +63,7 @@ def main(argv):
             return 1
         path, cols, rows = prefix_path(code), FIELDS, load_prefix(code)
         pn = f"{code}-{next_number(rows, code):04d}"
-        row = {"class": cats[code]["typical_class"]}
+        row = {"class": cats[code]["typical_class"], "pack_qty": "1"}
     elif code in projs:
         if not repo:
             print("error: custom parts need --repo (the product repo that owns them)")

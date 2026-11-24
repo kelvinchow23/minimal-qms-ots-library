@@ -1,2 +1,2 @@
-pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,currency,price_date,lifecycle,notes
-ECX-0001,"microSD card, SanDisk Extreme 64 GB microSDXC A2",A,SanDisk,SDSQXCU-064G-GN6MA,Amazon.ca,B09X7BYSFG,https://www.amazon.ca/dp/B09X7BYSFG,,,,draft,Holds the software image. kc may use another variant: needs an approved alternate (finding Q19).
+pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
+ECX-0001,"microSD card, SanDisk Extreme 64 GB microSDXC A2",A,SanDisk,SDSQXCU-064G-GN6MA,Amazon.ca,B09X7BYSFG,https://www.amazon.ca/dp/B09X7BYSFG,,1,,,draft,Holds the software image. kc may use another variant: needs an approved alternate (finding Q19).

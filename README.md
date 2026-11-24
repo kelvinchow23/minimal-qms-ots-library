@@ -4,11 +4,12 @@ Off-the-shelf (OTS) parts and the naming registers for
 [minimalQMS](https://github.com/kelvinchow23/minimal-qms) product repos.
 
 **Browse and search:** https://kelvinchow23.github.io/minimal-qms-ots-library/ — one tab per prefix,
-search across every field, flags prices older than 90 days. To add or change a part, use
+search across every field, flags prices older than 90 days. Fastener tabs split descriptions
+into Type / Thread / Length / Material with filters, and prices show per piece and per pack. To add or change a part, use
 **Request a part** on the site (a GitHub issue that an agent turns into a reviewed PR).
 
-- **OTS parts only:** manufacturer, MPN, supplier, vendor number, link, and the last known
-  price with its date. Custom parts and assemblies live in the product repo that owns them.
+- **Off-the-shelf (OTS) parts only:** manufacturer, MPN, supplier, vendor number, link,
+  pack size, and the last known price per piece with its date. Custom parts and assemblies live in the product repo that owns them.
 - **Naming registers:** OTS prefix codes (`categories.csv`) and project codes
   (`projects.csv`).
 - **Purchasing upload files generated from a product BOM,** in the purchasing system's
@@ -49,7 +50,16 @@ its KiCad BOM keeps their MPN and LCSC numbers. Use `ECE` only for components bo
 One file per prefix, like one tab per prefix in a workbook. Every file has the same columns:
 
 `pn, description, class, manufacturer, mpn, supplier, supplier_pn, link, unit_price,
-currency, price_date, lifecycle, notes`
+pack_qty, currency, price_date, lifecycle, notes`
+
+- `unit_price` is the price of **one piece**; `pack_qty` is how many pieces you buy at once
+  (`1` if sold singly). A pack of 100 screws for 6.98 USD is `unit_price=0.0698`,
+  `pack_qty=100`. The pack price is not stored: it is always `unit_price × pack_qty`.
+- `supplier_pn` is the supplier's own number. **McMaster-Carr parts leave `manufacturer` and
+  `mpn` blank**: McMaster hides them, and `check.py` enforces this.
+- Write fastener descriptions as `Type, size, style, material`, e.g.
+  `Screw, M3 x 6 mm, button head hex drive, 18-8 stainless` or `Hex nut, M3, 18-8 stainless`.
+  The site splits them into Type / Thread / Length / Material columns with filters.
 
 ## Product repo parts.csv (custom)
 
@@ -58,8 +68,9 @@ link, unit_price, currency, price_date, notes`
 
 - `make`: `print`, `machine`, `fab` (made by an outside fabricator), `assemble`, …
 - `source`: where the design lives, e.g. `Fusion: Housing lid v12` or a KiCad path.
-- The purchasing columns match the OTS file, so custom parts bought from a fabricator
-  (e.g. a PCB) appear on the same upload files.
+- The purchasing columns match the OTS file (without `pack_qty`: a custom part is ordered
+  one piece per item), so custom parts bought from a fabricator (e.g. a PCB) appear on the
+  same upload files.
 
 When generating an order, anything with a `supplier` is ordered as one item, even if it
 has its own BOM (e.g. a PCB ordered already assembled). Assemblies without a supplier are
@@ -80,6 +91,9 @@ python tools/new_pn.py PRX "Housing lid" --repo ../photo-reactor make=print "sou
 python tools/new_pn.py PRX "LED driver board, assembled" --repo ../photo-reactor --assembly \
     make=fab supplier=JLCPCB link=https://jlcpcb.com
 
+# costed BOM for 3 units: one row per part, cost per piece in its own currency and in CAD
+python tools/bom_cost.py ../photo-reactor/03_build_package/bom.csv PRX-A-0001 3
+
 # purchasing upload files for 3 units of a product (one CSV per supplier)
 python tools/requisition.py ../photo-reactor/03_build_package/bom.csv PRX-A-0001 3 --out out/
 
@@ -93,11 +107,30 @@ python tools/check.py --repo ../photo-reactor
 python tools/build_site.py
 ```
 
+### Costed BOM
+
+`bom_cost.py` expands the BOM like `requisition.py` and writes one row per part, one value
+per cell, so it pastes straight into a spreadsheet:
+
+`PN, Description, Qty per unit, Qty, Supplier, Supplier PN, Unit cost, Currency,
+Unit cost (CAD), Extended (CAD), Price date, Link`, then a `TOTAL` row in CAD.
+
+Costs are per piece (packs only matter when ordering). Prices stay in the supplier's own
+currency in the library; the BOM converts them with `rates.csv`
+(`currency, cad_per_unit, rate_date, source`, e.g. the Bank of Canada daily rate). Like
+prices, a rate always carries its date: the tool warns when a rate is over 30 days old or a
+price over 90 days, and `check.py` fails if a currency used by any part has no rate.
+
+### Purchasing upload files
+
 The upload files have exactly the purchasing template's columns: `Item Name`, `Prod No`,
 `# of Items`, `Price (Before Tax - Original Currency)`, `Item Link`. `price_date` is not
 included; the tool warns when a price is missing or older than 90 days.
 `--cart-link SUPPLIER=URL` puts one cart link on every row for that supplier.
-Quantities are rounded up to whole items, and `--stock stock.csv` subtracts stock on hand.
+Quantities are rounded up to whole items, and `--stock stock.csv` subtracts stock on hand
+(in pieces). Parts sold in packs are ordered in whole packs: 36 screws from packs of 100 is
+`# of Items` 1 at the pack price, and the `Item Name` ends `, pack of 100`.
+`record_order.py` records `qty` in pieces (1 pack of 100 is 100).
 
 ## Licence
 

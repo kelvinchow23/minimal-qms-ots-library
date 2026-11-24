@@ -8,7 +8,7 @@ import os
 import sys
 from datetime import date
 
-from lib import (CUSTOM_FIELDS, FIELDS, PARTS_DIR, PN_RE, categories, load_product_parts,
+from lib import (CUSTOM_FIELDS, FIELDS, PARTS_DIR, PN_RE, ROOT, categories, load_product_parts,
                  prefix_files, product_parts_path, projects, read_csv)
 
 LIFECYCLE = ("draft", "released", "obsolete")
@@ -49,7 +49,7 @@ def check_library(errors):
     for code in list(cats) + list(projs):
         if not (len(code) == 3 and code.isalpha() and code.isupper()):
             errors.append(f"code {code!r} must be 3 capital letters")
-    seen = set()
+    seen, all_rows = set(), []
     for name in prefix_files():
         code = name[:-4]
         path = os.path.join(PARTS_DIR, name)
@@ -58,6 +58,7 @@ def check_library(errors):
         if header(path) != FIELDS:
             errors.append(f"parts/{name}: header must be: {','.join(FIELDS)}")
         for i, r in enumerate(read_csv(path), start=2):
+            all_rows.append(r)
             pn = r.get("pn", "")
             where = f"parts/{name} line {i} ({pn or 'no pn'})"
             m = PN_RE.match(pn)
@@ -80,8 +81,42 @@ def check_library(errors):
                         errors.append(f"{where}: released part needs {k}")
                 if not (r.get("supplier_pn") or r.get("mpn")):
                     errors.append(f"{where}: released part needs supplier_pn or mpn")
+            pq = r.get("pack_qty", "")
+            if not (pq.isdigit() and int(pq) >= 1):
+                errors.append(f"{where}: pack_qty must be a whole number, 1 or more")
+            if r.get("supplier", "").strip().lower() == "mcmaster-carr" and (
+                    r.get("manufacturer") or r.get("mpn")):
+                errors.append(f"{where}: McMaster-Carr parts leave manufacturer and mpn blank")
             check_price(r, where, errors)
+    check_rates({r.get("currency") for r in all_rows if r.get("unit_price")}, errors)
     return len(seen)
+
+
+def check_rates(used, errors):
+    """rates.csv: currency, cad_per_unit, rate_date; every currency with a price needs a rate."""
+    path = os.path.join(ROOT, "rates.csv")
+    if not os.path.exists(path):
+        errors.append("rates.csv is missing")
+        return
+    if header(path)[:3] != ["currency", "cad_per_unit", "rate_date"]:
+        errors.append("rates.csv: header must start currency,cad_per_unit,rate_date")
+    have = set()
+    for i, r in enumerate(read_csv(path), start=2):
+        cur = r.get("currency", "")
+        have.add(cur)
+        try:
+            if float(r.get("cad_per_unit", "")) <= 0:
+                raise ValueError
+        except ValueError:
+            errors.append(f"rates.csv line {i} ({cur}): cad_per_unit must be a positive number")
+        if cur != "CAD":
+            try:
+                if date.fromisoformat(r.get("rate_date", "")) > date.today():
+                    errors.append(f"rates.csv line {i} ({cur}): rate_date is in the future")
+            except ValueError:
+                errors.append(f"rates.csv line {i} ({cur}): rate_date must be YYYY-MM-DD")
+    for cur in sorted(used - have - {None, ""}):
+        errors.append(f"rates.csv: no rate for {cur}, which parts are priced in")
 
 
 def check_product(repo, errors):

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OTS library · minimalQMS</title>
+<title>Off-the-shelf (OTS) library · minimalQMS</title>
 <style>
   :root {
     --bg: #f8fafc; --panel: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0;
@@ -67,6 +67,15 @@
   .badge.released { color: var(--ok); }
   .badge.obsolete { text-decoration: line-through; }
   mark { background: var(--accent-soft); color: inherit; border-radius: 2px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 2px 0 10px; }
+  .fgroup { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .flabel { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
+            margin-right: 2px; }
+  .chip { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 3px 9px;
+          border-radius: 999px; cursor: pointer; font: 12px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip.clear { color: var(--accent); border-style: dashed; }
+  .nowrap { white-space: nowrap; }
   .emptystate { padding: 40px 16px; text-align: center; color: var(--muted); }
   kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
   @media (max-width: 700px) {
@@ -84,7 +93,7 @@
 <body>
 <header>
   <div class="top">
-    <h1>OTS library</h1>
+    <h1>Off-the-shelf (OTS) library</h1>
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Search part numbers, descriptions, MPNs, suppliers…  ( / )" autocomplete="off">
@@ -94,6 +103,7 @@
   <nav class="tabs" id="tabs"></nav>
 </header>
 <main>
+  <div class="filters" id="filters" hidden></div>
   <div class="meta"><span id="count"></span><span id="built"></span></div>
   <div class="wrap">
     <table>
@@ -109,9 +119,17 @@ const STALE_DAYS = 90;
 const FAMILIES = { EC: "Electrical", HW: "Hardware" };
 const COLS = [
   ["pn", "Part no."], ["description", "Description"], ["mpn", "Manufacturer / MPN"],
-  ["supplier", "Supplier / Prod No"], ["unit_price", "Unit price"], ["class", "Class"], ["lifecycle", "Status"],
+  ["supplier", "Supplier / Prod No"], ["unit_price", "Price"], ["class", "Class"], ["lifecycle", "Status"],
 ];
+// Fastener tabs: the description is split into columns, e.g.
+// "Screw, M3 x 6 mm, button head hex drive, 18-8 stainless" -> Type, Thread, Length, Material.
+const SPEC_COLS = [
+  ["pn", "Part no."], ["kind", "Type"], ["thread", "Thread"], ["length", "Length"], ["material", "Material"],
+  ["supplier", "Supplier / Prod No"], ["unit_price", "Price"], ["lifecycle", "Status"],
+];
+const FILTERS = [["thread", "Thread"], ["kind", "Type"], ["length", "Length"]];
 let data = { prefixes: [], parts: [] }, tab = "ALL", sortKey = "pn", sortDir = 1;
+let filt = { thread: new Set(), kind: new Set(), length: new Set() };
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -126,21 +144,55 @@ function hl(text) {
 }
 const prefixOf = (pn) => (pn || "").slice(0, 3);
 const ageDays = (d) => (d ? Math.floor((Date.now() - new Date(d + "T00:00:00")) / 86400000) : null);
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const MATERIAL = /stainless|brass|steel|nylon|alumin|zinc|plastic|peek/i;
+function spec(p) {
+  if (p._spec !== undefined) return p._spec;
+  const d = p.description || "";
+  const t = d.match(/\bM(\d+(?:\.\d+)?)\b/);
+  if (!t) return (p._spec = null);
+  const segs = d.split(/,\s*/);
+  const len = d.match(/\bx\s*(\d+(?:\.\d+)?)\s*mm\b/i);
+  const material = segs.length > 1 && MATERIAL.test(segs[segs.length - 1]) ? segs[segs.length - 1] : "";
+  const style = segs.slice(1).filter((s) => s !== material && !/^M\d/.test(s)).join(", ");
+  // screws are typed by head ("Button head"); everything else by its noun ("Hex nut")
+  const kind = style && /head/i.test(style) ? cap(style.replace(/\s*hex drive$/i, "")) : segs[0];
+  return (p._spec = { thread: "M" + t[1], tnum: parseFloat(t[1]), length: len ? len[1] : "",
+                      lnum: len ? parseFloat(len[1]) : NaN, kind, material });
+}
 
 function haystack(p) {
   return [p.pn, p.description, p.manufacturer, p.mpn, p.supplier, p.supplier_pn, p.notes].join(" ").toLowerCase();
 }
+const inTab = (p) => tab === "ALL" || prefixOf(p.pn) === tab;
+const matches = (p) => { const h = haystack(p); return terms().every((t) => h.includes(t)); };
+// spec view: a single prefix whose parts mostly have a thread size (fasteners)
+function specView() {
+  if (tab === "ALL") return false;
+  const ps = data.parts.filter(inTab);
+  return ps.length > 0 && ps.filter(spec).length * 2 >= ps.length;
+}
+function passesFilters(p) {
+  const s = spec(p);
+  return FILTERS.every(([k]) => !filt[k].size || (s && filt[k].has(s[k])));
+}
+function sortVal(p, k) {
+  const s = spec(p) || {};
+  if (k === "unit_price") return parseFloat(p.unit_price || "NaN");
+  if (k === "thread") return s.tnum ?? NaN;
+  if (k === "length") return s.lnum ?? NaN;
+  if (k === "kind" || k === "material") return (s[k] || "").toLowerCase();
+  return (p[k] || "").toLowerCase();
+}
 
 function visible() {
-  const ts = terms();
-  return data.parts
-    .filter((p) => tab === "ALL" || prefixOf(p.pn) === tab)
-    .filter((p) => { const h = haystack(p); return ts.every((t) => h.includes(t)); })
+  return data.parts.filter(inTab).filter(matches).filter(passesFilters)
     .sort((a, b) => {
-      const x = sortKey === "unit_price" ? parseFloat(a[sortKey] || "NaN") : (a[sortKey] || "").toLowerCase();
-      const y = sortKey === "unit_price" ? parseFloat(b[sortKey] || "NaN") : (b[sortKey] || "").toLowerCase();
+      const x = sortVal(a, sortKey), y = sortVal(b, sortKey);
       if (Number.isNaN(x)) return 1; if (Number.isNaN(y)) return -1;
-      return (x > y ? 1 : x < y ? -1 : 0) * sortDir;
+      if (x !== y) return (x > y ? 1 : -1) * sortDir;
+      return a.pn < b.pn ? -1 : 1;
     });
 }
 
@@ -162,40 +214,87 @@ function renderTabs() {
   $("tabs").innerHTML = html;
 }
 
+function renderFilters() {
+  const box = $("filters");
+  if (!specView()) { box.hidden = true; box.innerHTML = ""; return; }
+  const ps = data.parts.filter(inTab).filter(matches).map(spec).filter(Boolean);
+  const order = { thread: (a, b) => parseFloat(a.slice(1)) - parseFloat(b.slice(1)),
+                  length: (a, b) => parseFloat(a) - parseFloat(b), kind: (a, b) => a.localeCompare(b) };
+  let html = "";
+  for (const [k, label] of FILTERS) {
+    const vals = [...new Set([...ps.map((s) => s[k]).filter(Boolean), ...filt[k]])].sort(order[k]);
+    if (vals.length < 2 && !filt[k].size) continue;
+    html += `<div class="fgroup"><span class="flabel">${label}</span>` + vals.map((v) =>
+      `<button class="chip ${filt[k].has(v) ? "on" : ""}" data-filter="${k}" data-value="${esc(v)}">${esc(v)}${k === "length" ? " mm" : ""}</button>`).join("") + `</div>`;
+  }
+  if (FILTERS.some(([k]) => filt[k].size)) html += `<button class="chip clear" data-filter="clear">Clear filters</button>`;
+  box.innerHTML = html;
+  box.hidden = !html;
+}
+
+// the Length column only shows on tabs where some part has a length (screws, not nuts)
+const hasLength = () => data.parts.filter(inTab).some((p) => spec(p) && spec(p).length);
 function renderHead() {
-  $("head").innerHTML = COLS.map(([k, label]) =>
+  const cols = specView() ? SPEC_COLS.filter(([k]) => k !== "length" || hasLength()) : COLS;
+  $("head").innerHTML = cols.map(([k, label]) =>
     `<th data-sort="${k}">${label} <span class="arrow">${sortKey === k ? (sortDir > 0 ? "▲" : "▼") : ""}</span></th>`).join("");
+}
+
+function money(v) { return v >= 1 ? v.toFixed(2) : String(+v.toFixed(4)); }
+function priceCell(p) {
+  if (!p.unit_price) return `<span class="sub">–</span>`;
+  const up = parseFloat(p.unit_price), pack = parseInt(p.pack_qty || "1", 10) || 1;
+  const age = ageDays(p.price_date);
+  const stale = age !== null && age > STALE_DAYS;
+  return `<div><b>${money(up)}</b> ${esc(p.currency)}${pack > 1 ? " / pc" : ""}`
+    + (pack > 1 ? `<div class="sub">${(up * pack).toFixed(2)} / pack of ${pack}</div>` : "")
+    + `<div class="sub">${esc(p.price_date)}</div>`
+    + (stale ? `<div class="stale">${age} days old</div>` : "") + `</div>`;
 }
 
 function renderRows() {
   const rows = visible();
+  const sv = specView(), showLen = sv && hasLength();
   const pre = data.prefixes.find((c) => c.code === tab);
   $("count").textContent = `${rows.length} part${rows.length === 1 ? "" : "s"}` + (pre ? ` in ${pre.code} · ${pre.description}` : "");
   $("rows").innerHTML = rows.map((p) => {
-    const age = ageDays(p.price_date);
-    const stale = p.unit_price && age !== null && age > STALE_DAYS;
     const prod = p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${hl(p.supplier_pn || "link")}</a>` : hl(p.supplier_pn);
-    return `<tr>
-      <td data-label="Part no."><span><span class="pn">${hl(p.pn)}</span><button class="copy" data-copy="${esc(p.pn)}" title="Copy part number">⧉</button></span></td>
-      <td data-label="Description"><div>${hl(p.description)}${p.notes ? `<div class="sub">${hl(p.notes)}</div>` : ""}</div></td>
+    const notes = p.notes ? `<div class="sub">${hl(p.notes)}</div>` : "";
+    const pnCell = `<td data-label="Part no."><span><span class="pn">${hl(p.pn)}</span><button class="copy" data-copy="${esc(p.pn)}" title="Copy part number">⧉</button></span></td>`;
+    const supCell = `<td data-label="Supplier"><div>${hl(p.supplier)}<div class="mono">${prod}</div></div></td>`;
+    const priceTd = `<td data-label="Price" class="price">${priceCell(p)}</td>`;
+    const status = `<td data-label="Status"><span class="badge ${esc(p.lifecycle)}">${esc(p.lifecycle)}</span></td>`;
+    const s = sv && spec(p);
+    if (s) {
+      return `<tr>${pnCell}
+        <td data-label="Type" title="${esc(p.description)}"><div>${hl(s.kind)}${notes}</div></td>
+        <td data-label="Thread" class="nowrap"><b>${hl(s.thread)}</b></td>
+        ${showLen ? `<td data-label="Length" class="nowrap">${s.length ? esc(s.length) + " mm" : `<span class="sub">–</span>`}</td>` : ""}
+        <td data-label="Material" class="nowrap">${hl(s.material)}</td>
+        ${supCell}${priceTd}${status}</tr>`;
+    }
+    if (sv) {  // a part in a fastener tab without a thread size spans the spec columns
+      return `<tr>${pnCell}<td data-label="Description" colspan="${showLen ? 4 : 3}"><div>${hl(p.description)}${notes}</div></td>${supCell}${priceTd}${status}</tr>`;
+    }
+    return `<tr>${pnCell}
+      <td data-label="Description"><div>${hl(p.description)}${notes}</div></td>
       <td data-label="Manufacturer"><div>${hl(p.manufacturer)}<div class="mono">${hl(p.mpn)}</div></div></td>
-      <td data-label="Supplier"><div>${hl(p.supplier)}<div class="mono">${prod}</div></div></td>
-      <td data-label="Unit price" class="price"><div>${p.unit_price ? `${esc(p.unit_price)} ${esc(p.currency)}<div class="sub">${esc(p.price_date)}</div>` : `<span class="sub">–</span>`}
-        ${stale ? `<div class="stale">${age} days old</div>` : ""}</div></td>
-      <td data-label="Class">${esc(p.class)}</td>
-      <td data-label="Status"><span class="badge ${esc(p.lifecycle)}">${esc(p.lifecycle)}</span></td>
-    </tr>`;
+      ${supCell}${priceTd}
+      <td data-label="Class">${esc(p.class)}</td>${status}</tr>`;
   }).join("");
   const empty = $("empty");
   empty.hidden = rows.length > 0;
   if (!rows.length) {
     empty.innerHTML = data.parts.length === 0
       ? `The library has no parts yet. Use <b>Request a part</b> to add the first one.`
-      : `No parts match “${esc($("q").value)}”${tab !== "ALL" ? ` in ${esc(tab)} — <a href="#" data-tab="ALL">search all prefixes</a>` : ""}.`;
+      : FILTERS.some(([k]) => filt[k].size)
+        ? `No parts match these filters — <a href="#" data-filter="clear">clear filters</a>.`
+        : `No parts match “${esc($("q").value)}”${tab !== "ALL" ? ` in ${esc(tab)} — <a href="#" data-tab="ALL">search all prefixes</a>` : ""}.`;
   }
 }
 
-function render() { renderTabs(); renderHead(); renderRows(); saveHash(); }
+function clearFilters() { for (const k in filt) filt[k].clear(); }
+function render() { renderTabs(); renderFilters(); renderHead(); renderRows(); saveHash(); }
 function saveHash() {
   const h = new URLSearchParams();
   if (tab !== "ALL") h.set("tab", tab);
@@ -205,7 +304,14 @@ function saveHash() {
 
 document.addEventListener("click", (e) => {
   const t = e.target.closest("[data-tab]");
-  if (t) { e.preventDefault(); tab = t.dataset.tab; render(); return; }
+  if (t) { e.preventDefault(); if (tab !== t.dataset.tab) clearFilters(); tab = t.dataset.tab; render(); return; }
+  const f = e.target.closest("[data-filter]");
+  if (f) {
+    e.preventDefault();
+    if (f.dataset.filter === "clear") clearFilters();
+    else { const set = filt[f.dataset.filter], v = f.dataset.value; set.has(v) ? set.delete(v) : set.add(v); }
+    render(); return;
+  }
   const s = e.target.closest("[data-sort]");
   if (s) { const k = s.dataset.sort; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; render(); return; }
   const c = e.target.closest("[data-copy]");
@@ -220,7 +326,9 @@ $("request").href = `${REPO}/issues/new?template=part-request.md`;
 
 function readHash() {
   const h = new URLSearchParams(location.hash.slice(1));
-  tab = h.get("tab") || "ALL";
+  const next = h.get("tab") || "ALL";
+  if (next !== tab) clearFilters();
+  tab = next;
   $("q").value = h.get("q") || "";
 }
 window.addEventListener("hashchange", () => { readHash(); render(); });
