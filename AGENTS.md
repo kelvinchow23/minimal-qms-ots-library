@@ -36,6 +36,9 @@ names may differ from the GitHub names (e.g. `minimal-qms` may be cloned as `min
    date the price was checked, and `currency`.
 4. **Prefer the supplier's part number** for `supplier_pn` ("Prod No" on uploads). Use the
    MPN when the supplier has none.
+   **McMaster-Carr hides the manufacturer and MPN: for a McMaster part, leave
+   `manufacturer` and `mpn` blank** (never fill them with "McMaster-Carr" or the McMaster
+   number). The McMaster number goes in `supplier_pn` only. `check.py` enforces this.
 5. **Run `python tools/check.py` before finishing** (add `--repo` when custom parts changed) and report its result.
 6. Commit format: `[PN] summary`, e.g. `[ECE-0001] add 365 nm LED`, or `[LIB] summary` for
    tools and repo-wide changes.

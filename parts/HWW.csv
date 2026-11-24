@@ -1,3 +1,3 @@
 pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,currency,price_date,lifecycle,notes
-HWW-0001,"Washer, M3, 18-8 stainless, pack of 100",B,McMaster-Carr,93475A210,McMaster-Carr,93475A210,https://www.mcmaster.com/93475A210/,2.89,USD,2026-11-24,draft,McMaster list price per pack
-HWW-0002,"Washer, M4, 18-8 stainless, pack of 100",B,McMaster-Carr,93475A230,McMaster-Carr,93475A230,https://www.mcmaster.com/93475A230/,3.93,USD,2026-11-24,draft,McMaster list price per pack
+HWW-0001,"Washer, M3, 18-8 stainless, pack of 100",B,,,McMaster-Carr,93475A210,https://www.mcmaster.com/93475A210/,2.89,USD,2026-11-24,draft,McMaster list price per pack
+HWW-0002,"Washer, M4, 18-8 stainless, pack of 100",B,,,McMaster-Carr,93475A230,https://www.mcmaster.com/93475A230/,3.93,USD,2026-11-24,draft,McMaster list price per pack

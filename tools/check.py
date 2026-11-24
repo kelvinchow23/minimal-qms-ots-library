@@ -80,6 +80,9 @@ def check_library(errors):
                         errors.append(f"{where}: released part needs {k}")
                 if not (r.get("supplier_pn") or r.get("mpn")):
                     errors.append(f"{where}: released part needs supplier_pn or mpn")
+            if r.get("supplier", "").strip().lower() == "mcmaster-carr" and (
+                    r.get("manufacturer") or r.get("mpn")):
+                errors.append(f"{where}: McMaster-Carr parts leave manufacturer and mpn blank")
             check_price(r, where, errors)
     return len(seen)
 
