@@ -1,36 +1,36 @@
-pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,currency,price_date,lifecycle,notes
-HWB-0001,"Screw, M2 x 6 mm, socket head cap, 18-8 stainless, pack of 100",B,,,McMaster-Carr,91292A831,https://www.mcmaster.com/91292A831/,9.77,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0002,"Screw, M2 x 10 mm, socket head cap, 18-8 stainless, pack of 100",B,,,McMaster-Carr,91292A833,https://www.mcmaster.com/91292A833/,7.57,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0003,"Screw, M2.5 x 6 mm, pan head Phillips, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92000A104,https://www.mcmaster.com/92000A104/,5.11,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0004,"Screw, M2.5 x 6 mm, flat head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92125A084,https://www.mcmaster.com/92125A084/,6.88,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0005,"Screw, M2.5 x 8 mm, flat head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92125A086,https://www.mcmaster.com/92125A086/,8.13,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0006,"Screw, M3 x 6 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A126,https://www.mcmaster.com/92125A126/,7.46,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0007,"Screw, M3 x 10 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A130,https://www.mcmaster.com/92125A130/,8.77,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0008,"Screw, M3 x 15 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A103,https://www.mcmaster.com/92125A103/,7.64,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0009,"Screw, M3 x 20 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A136,https://www.mcmaster.com/92125A136/,14.01,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0010,"Screw, M3 x 25 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A138,https://www.mcmaster.com/92125A138/,12.54,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0011,"Screw, M3 x 6 mm, button head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92095A179,https://www.mcmaster.com/92095A179/,6.98,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0012,"Screw, M3 x 10 mm, button head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92095A182,https://www.mcmaster.com/92095A182/,8.64,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0013,"Screw, M3 x 15 mm, button head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92095A119,https://www.mcmaster.com/92095A119/,6.59,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0014,"Screw, M3 x 20 mm, button head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92095A185,https://www.mcmaster.com/92095A185/,5.83,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0015,"Screw, M3 x 25 mm, button head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92095A186,https://www.mcmaster.com/92095A186/,6.98,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0016,"Screw, M4 x 6 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A186,https://www.mcmaster.com/92125A186/,11.04,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0017,"Screw, M4 x 10 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A190,https://www.mcmaster.com/92125A190/,10.46,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0018,"Screw, M4 x 15 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A104,https://www.mcmaster.com/92125A104/,11.07,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0019,"Screw, M4 x 20 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A198,https://www.mcmaster.com/92125A198/,14.53,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0020,"Screw, M4 x 25 mm, flat head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92125A202,https://www.mcmaster.com/92125A202/,19.12,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0021,"Screw, M4 x 45 mm, flat head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92125A207,https://www.mcmaster.com/92125A207/,11.11,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0022,"Screw, M4 x 6 mm, button head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92095A188,https://www.mcmaster.com/92095A188/,13.20,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0023,"Screw, M4 x 10 mm, button head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92095A190,https://www.mcmaster.com/92095A190/,9.44,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0024,"Screw, M4 x 15 mm, button head hex drive, 18-8 stainless, pack of 100",B,,,McMaster-Carr,92095A125,https://www.mcmaster.com/92095A125/,9.20,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0025,"Screw, M4 x 20 mm, button head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92095A196,https://www.mcmaster.com/92095A196/,9.47,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0026,"Screw, M4 x 25 mm, button head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92095A197,https://www.mcmaster.com/92095A197/,10.91,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0027,"Screw, M4 x 45 mm, button head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92095A205,https://www.mcmaster.com/92095A205/,8.91,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0028,"Screw, M6 x 10 mm, flat head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92125A234,https://www.mcmaster.com/92125A234/,10.90,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0029,"Screw, M6 x 15 mm, flat head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92125A111,https://www.mcmaster.com/92125A111/,10.75,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0030,"Screw, M6 x 20 mm, flat head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92125A240,https://www.mcmaster.com/92125A240/,8.04,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0031,"Screw, M6 x 25 mm, flat head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92125A242,https://www.mcmaster.com/92125A242/,8.56,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0032,"Screw, M6 x 10 mm, button head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92095A224,https://www.mcmaster.com/92095A224/,12.63,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0033,"Screw, M6 x 15 mm, button head hex drive, 18-8 stainless, pack of 50",B,,,McMaster-Carr,92095A128,https://www.mcmaster.com/92095A128/,11.40,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0034,"Screw, M6 x 20 mm, button head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92095A240,https://www.mcmaster.com/92095A240/,9.33,USD,2026-11-24,draft,McMaster list price per pack
-HWB-0035,"Screw, M6 x 25 mm, button head hex drive, 18-8 stainless, pack of 25",B,,,McMaster-Carr,92095A242,https://www.mcmaster.com/92095A242/,10.76,USD,2026-11-24,draft,McMaster list price per pack
+pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
+HWB-0001,"Screw, M2 x 6 mm, socket head cap, 18-8 stainless",B,,,McMaster-Carr,91292A831,https://www.mcmaster.com/91292A831/,0.0977,100,USD,2026-11-24,draft,
+HWB-0002,"Screw, M2 x 10 mm, socket head cap, 18-8 stainless",B,,,McMaster-Carr,91292A833,https://www.mcmaster.com/91292A833/,0.0757,100,USD,2026-11-24,draft,
+HWB-0003,"Screw, M2.5 x 6 mm, pan head Phillips, 18-8 stainless",B,,,McMaster-Carr,92000A104,https://www.mcmaster.com/92000A104/,0.0511,100,USD,2026-11-24,draft,
+HWB-0004,"Screw, M2.5 x 6 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A084,https://www.mcmaster.com/92125A084/,0.2752,25,USD,2026-11-24,draft,
+HWB-0005,"Screw, M2.5 x 8 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A086,https://www.mcmaster.com/92125A086/,0.3252,25,USD,2026-11-24,draft,
+HWB-0006,"Screw, M3 x 6 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A126,https://www.mcmaster.com/92125A126/,0.0746,100,USD,2026-11-24,draft,
+HWB-0007,"Screw, M3 x 10 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A130,https://www.mcmaster.com/92125A130/,0.0877,100,USD,2026-11-24,draft,
+HWB-0008,"Screw, M3 x 15 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A103,https://www.mcmaster.com/92125A103/,0.0764,100,USD,2026-11-24,draft,
+HWB-0009,"Screw, M3 x 20 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A136,https://www.mcmaster.com/92125A136/,0.1401,100,USD,2026-11-24,draft,
+HWB-0010,"Screw, M3 x 25 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A138,https://www.mcmaster.com/92125A138/,0.1254,100,USD,2026-11-24,draft,
+HWB-0011,"Screw, M3 x 6 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A179,https://www.mcmaster.com/92095A179/,0.0698,100,USD,2026-11-24,draft,
+HWB-0012,"Screw, M3 x 10 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A182,https://www.mcmaster.com/92095A182/,0.0864,100,USD,2026-11-24,draft,
+HWB-0013,"Screw, M3 x 15 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A119,https://www.mcmaster.com/92095A119/,0.0659,100,USD,2026-11-24,draft,
+HWB-0014,"Screw, M3 x 20 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A185,https://www.mcmaster.com/92095A185/,0.1166,50,USD,2026-11-24,draft,
+HWB-0015,"Screw, M3 x 25 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A186,https://www.mcmaster.com/92095A186/,0.1396,50,USD,2026-11-24,draft,
+HWB-0016,"Screw, M4 x 6 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A186,https://www.mcmaster.com/92125A186/,0.1104,100,USD,2026-11-24,draft,
+HWB-0017,"Screw, M4 x 10 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A190,https://www.mcmaster.com/92125A190/,0.1046,100,USD,2026-11-24,draft,
+HWB-0018,"Screw, M4 x 15 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A104,https://www.mcmaster.com/92125A104/,0.1107,100,USD,2026-11-24,draft,
+HWB-0019,"Screw, M4 x 20 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A198,https://www.mcmaster.com/92125A198/,0.1453,100,USD,2026-11-24,draft,
+HWB-0020,"Screw, M4 x 25 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A202,https://www.mcmaster.com/92125A202/,0.1912,100,USD,2026-11-24,draft,
+HWB-0021,"Screw, M4 x 45 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A207,https://www.mcmaster.com/92125A207/,0.4444,25,USD,2026-11-24,draft,
+HWB-0022,"Screw, M4 x 6 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A188,https://www.mcmaster.com/92095A188/,0.132,100,USD,2026-11-24,draft,
+HWB-0023,"Screw, M4 x 10 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A190,https://www.mcmaster.com/92095A190/,0.0944,100,USD,2026-11-24,draft,
+HWB-0024,"Screw, M4 x 15 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A125,https://www.mcmaster.com/92095A125/,0.092,100,USD,2026-11-24,draft,
+HWB-0025,"Screw, M4 x 20 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A196,https://www.mcmaster.com/92095A196/,0.1894,50,USD,2026-11-24,draft,
+HWB-0026,"Screw, M4 x 25 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A197,https://www.mcmaster.com/92095A197/,0.2182,50,USD,2026-11-24,draft,
+HWB-0027,"Screw, M4 x 45 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A205,https://www.mcmaster.com/92095A205/,0.3564,25,USD,2026-11-24,draft,
+HWB-0028,"Screw, M6 x 10 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A234,https://www.mcmaster.com/92125A234/,0.218,50,USD,2026-11-24,draft,
+HWB-0029,"Screw, M6 x 15 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A111,https://www.mcmaster.com/92125A111/,0.215,50,USD,2026-11-24,draft,
+HWB-0030,"Screw, M6 x 20 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A240,https://www.mcmaster.com/92125A240/,0.3216,25,USD,2026-11-24,draft,
+HWB-0031,"Screw, M6 x 25 mm, flat head hex drive, 18-8 stainless",B,,,McMaster-Carr,92125A242,https://www.mcmaster.com/92125A242/,0.3424,25,USD,2026-11-24,draft,
+HWB-0032,"Screw, M6 x 10 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A224,https://www.mcmaster.com/92095A224/,0.2526,50,USD,2026-11-24,draft,
+HWB-0033,"Screw, M6 x 15 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A128,https://www.mcmaster.com/92095A128/,0.228,50,USD,2026-11-24,draft,
+HWB-0034,"Screw, M6 x 20 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A240,https://www.mcmaster.com/92095A240/,0.3732,25,USD,2026-11-24,draft,
+HWB-0035,"Screw, M6 x 25 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A242,https://www.mcmaster.com/92095A242/,0.4304,25,USD,2026-11-24,draft,
