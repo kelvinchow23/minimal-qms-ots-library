@@ -1,2 +1,2 @@
-pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
-ECP-0001,"Wall power supply, 5.1 V 2.5 A, USB Micro-B, UL listed, 100-240 VAC",A,PiShop,1260,PiShop,1260,https://www.pishop.ca/product/wall-adapter-power-supply-5-25v-dc-2-4a-usb-micro-b/,9.95,1,CAD,2026-11-24,draft,"PiShop own brand; no separate MPN, so the PiShop SKU is used. Certifications per PiShop page: CE, FCC, UL."
+pn,description,class,manufacturer,manufacturer_pn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
+ECP-0001,"Wall power supply, 5.1 V 2.5 A, USB Micro-B, 100-240 VAC, UL listed",A,PiShop,1260,PiShop,1260,https://www.pishop.ca/product/wall-adapter-power-supply-5-25v-dc-2-4a-usb-micro-b/,9.95,1,CAD,2026-11-24,draft,"PiShop own brand: the PiShop SKU stands in for the manufacturer PN. CE, FCC and UL listed."

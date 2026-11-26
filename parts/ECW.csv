@@ -1,2 +1,2 @@
-pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
-ECW-0001,"Qwiic / STEMMA QT cable, JST SH 4-pin, 100 mm",B,Adafruit,4210,Mouser,485-4210,https://www.mouser.ca/ProductDetail/485-4210,1.37,1,CAD,2026-11-24,draft,
+pn,description,class,manufacturer,manufacturer_pn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
+ECW-0001,"Cable, Qwiic/STEMMA QT (JST SH 4-pin), 100 mm",B,Adafruit,4210,Mouser,485-4210,https://www.mouser.ca/ProductDetail/485-4210,1.37,1,CAD,2026-11-24,draft,

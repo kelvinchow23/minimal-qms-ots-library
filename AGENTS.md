@@ -37,15 +37,19 @@ names may differ from the GitHub names (e.g. `minimal-qms` may be cloned as `min
    for parts sold in packs. Exchange rates in `rates.csv` follow the same rule: update
    `rate_date` with `cad_per_unit` (Bank of Canada daily rate).
 4. **Prefer the supplier's part number** for `supplier_pn` ("Prod No" on uploads). Use the
-   MPN when the supplier has none.
+   manufacturer PN when the supplier has none.
    **McMaster-Carr hides the manufacturer and MPN: for a McMaster part, leave
-   `manufacturer` and `mpn` blank** (never fill them with "McMaster-Carr" or the McMaster
+   `manufacturer` and `manufacturer_pn` blank** (never fill them with "McMaster-Carr" or the McMaster
    number). The McMaster number goes in `supplier_pn` only. `check.py` enforces this.
-5. **Run `python tools/check.py` before finishing** (add `--repo` when custom parts changed) and report its result.
-6. Commit format: `[PN] summary`, e.g. `[ECE-0001] add 365 nm LED`, or `[LIB] summary` for
+5. **One value per column.** `description` is one line in the README's pattern (fasteners:
+   `Type, size, [style, ]material`). `notes` hold only what a buyer needs that has no
+   column, under 120 characters: no prices, dates, PNs that have a column, CAD-model
+   sources or project decisions (those go in the product repo or the Fusion design).
+6. **Run `python tools/check.py` before finishing** (add `--repo` when custom parts changed) and report its result.
+7. Commit format: `[PN] summary`, e.g. `[ECE-0001] add 365 nm LED`, or `[LIB] summary` for
    tools and repo-wide changes.
 
-7. **Canadian English spelling** in prose (organization, colour, centre, licence as the
+8. **Canadian English spelling** in prose (organization, colour, centre, licence as the
    noun). Proper names and code identifiers stay as they are.
 
 ## Typical requests

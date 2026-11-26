@@ -129,7 +129,7 @@ def main(argv):
         supplier = p["supplier"]
         by_supplier[supplier].append({
             "Item Name": p.get("description", "") + (f", pack of {pack}" if pack > 1 else ""),
-            "Prod No": p.get("supplier_pn") or p.get("mpn", ""),
+            "Prod No": p.get("supplier_pn") or p.get("manufacturer_pn", ""),
             "# of Items": qty,
             "Price (Before Tax - Original Currency)": price,
             "Item Link": cart.get(supplier) or p.get("link", ""),

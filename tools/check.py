@@ -5,6 +5,7 @@ Usage:
     python tools/check.py --repo PRODUCT_REPO  # also the product's 03_build_package/parts.csv
 """
 import os
+import re
 import sys
 from datetime import date
 
@@ -12,6 +13,13 @@ from lib import (CUSTOM_FIELDS, FIELDS, PARTS_DIR, PN_RE, ROOT, categories, load
                  prefix_files, product_parts_path, projects, read_csv)
 
 LIFECYCLE = ("draft", "released", "obsolete")
+# fastener prefixes whose descriptions follow "Type, size, [style, ]material"
+FASTENER_PREFIXES = {"HWB", "HWN", "HWW", "HWS"}
+THREAD_RE = re.compile(r"(M\d+(\.\d+)?|#\d+-\d+|\d+/\d+\"?-\d+)( x \d+(\.\d+)? mm)?")
+MATERIAL_RE = re.compile(r"stainless|steel|brass|nylon|alumin|zinc|titanium|peek|plastic|copper", re.I)
+NOTES_MAX = 120
+NOTE_PRICE_RE = re.compile(r"[$€£]\s*\d|\b\d+(\.\d+)?\s*(USD|CAD|EUR)\b|\b(USD|CAD|US\$)\s*\d")
+NOTE_DATE_RE = re.compile(r"\b20\d\d-\d\d-\d\d\b")
 
 
 def header(path):
@@ -35,6 +43,25 @@ def check_price(r, where, errors):
                 errors.append(f"{where}: price_date is in the future")
         except ValueError:
             errors.append(f"{where}: price_date must be YYYY-MM-DD")
+
+
+def check_text(r, code, where, errors):
+    """One value per column: the description follows the pattern, notes hold only extras."""
+    d, n = r.get("description", ""), r.get("notes", "")
+    if "\n" in d or "\n" in n:
+        errors.append(f"{where}: description and notes are one line")
+    if code in FASTENER_PREFIXES and d:
+        segs = d.split(", ")
+        if len(segs) < 3 or not THREAD_RE.fullmatch(segs[1]) or not MATERIAL_RE.search(segs[-1]):
+            errors.append(f"{where}: fastener description must be 'Type, size, [style, ]material', "
+                          f"e.g. 'Screw, M3 x 6 mm, button head hex drive, 18-8 stainless'")
+        elif code == "HWB" and " x " not in segs[1]:
+            errors.append(f"{where}: screw size needs a length, e.g. 'M3 x 6 mm'")
+    if len(n) > NOTES_MAX:
+        errors.append(f"{where}: notes are {len(n)} characters; keep them under {NOTES_MAX} "
+                      "(only what a buyer needs that has no column)")
+    if NOTE_PRICE_RE.search(n) or NOTE_DATE_RE.search(n):
+        errors.append(f"{where}: notes must not hold prices or dates; they have their own columns")
 
 
 def check_library(errors):
@@ -79,14 +106,15 @@ def check_library(errors):
                 for k in ("supplier", "link"):
                     if not r.get(k):
                         errors.append(f"{where}: released part needs {k}")
-                if not (r.get("supplier_pn") or r.get("mpn")):
-                    errors.append(f"{where}: released part needs supplier_pn or mpn")
+                if not (r.get("supplier_pn") or r.get("manufacturer_pn")):
+                    errors.append(f"{where}: released part needs supplier_pn or manufacturer_pn")
             pq = r.get("pack_qty", "")
             if not (pq.isdigit() and int(pq) >= 1):
                 errors.append(f"{where}: pack_qty must be a whole number, 1 or more")
             if r.get("supplier", "").strip().lower() == "mcmaster-carr" and (
-                    r.get("manufacturer") or r.get("mpn")):
-                errors.append(f"{where}: McMaster-Carr parts leave manufacturer and mpn blank")
+                    r.get("manufacturer") or r.get("manufacturer_pn")):
+                errors.append(f"{where}: McMaster-Carr parts leave manufacturer and manufacturer_pn blank")
+            check_text(r, code, where, errors)
             check_price(r, where, errors)
     check_rates({r.get("currency") for r in all_rows if r.get("unit_price")}, errors)
     return len(seen)
