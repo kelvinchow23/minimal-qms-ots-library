@@ -22,7 +22,7 @@ import sys
 from collections import defaultdict
 from datetime import date
 
-from lib import ROOT, load_parts, load_product_parts, parts_by_pn, read_csv
+from lib import ROOT, load_parts, load_product_parts, parts_by_pn, read_bom, read_csv
 from requisition import STALE_DAYS, expand
 
 RATES = os.path.join(ROOT, "rates.csv")
@@ -50,8 +50,8 @@ def main(argv):
     repo = opts["repo"] or os.path.dirname(os.path.dirname(os.path.abspath(bom_path)))
     parts = parts_by_pn(load_parts() + load_product_parts(repo))
     bom = defaultdict(list)
-    for line in read_csv(bom_path):
-        bom[line["parent_pn"]].append(line)
+    for parent, lines in read_bom(bom_path).items():
+        bom[parent].extend(lines)
 
     need, made = defaultdict(float), defaultdict(float)
     top_part = parts.get(top)

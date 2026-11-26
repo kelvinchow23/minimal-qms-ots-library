@@ -25,6 +25,7 @@ pack, default 1). McMaster-Carr parts leave manufacturer and mpn blank.
 New rows start as lifecycle=draft (custom parts also rev=A). price_date defaults to today
 when a price is given.
 """
+import os
 import sys
 from datetime import date
 
@@ -72,6 +73,11 @@ def main(argv):
         num = next_number(rows, code)
         pn = f"{code}-A-{num:04d}" if assembly else f"{code}-{num:04d}"
         row = {"rev": "A", "class": "A"}
+        if not os.path.exists(path):
+            # newer repos have no parts register: the PN goes straight into the BOM source
+            print(pn)
+            print(f"(next free number after the PNs in {repo}'s BOM sources; add it to the BOM)", file=sys.stderr)
+            return 0
     else:
         print(f"error: {code} is neither a prefix (categories.csv) nor a project (projects.csv)")
         return 1

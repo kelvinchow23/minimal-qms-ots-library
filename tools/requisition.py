@@ -4,7 +4,8 @@ Usage:
     python tools/requisition.py BOM.csv TOP_PN QTY [--repo PRODUCT_REPO] [--out DIR]
                                 [--stock STOCK.csv] [--cart-link SUPPLIER=URL ...] [--skip-class C]
 
-BOM.csv is a product repo's bom.csv (parent_pn, parent_rev, pn, qty, ...). Parts are looked
+BOM.csv is a product repo's BOM: a build document's bom.csv (02_design/<assembly>/bom.csv) or an
+older master bom.csv (parent_pn, parent_rev, pn, qty, ...). Parts are looked
 up in this library (OTS, parts/CCC.csv) and in the product repo's 03_build_package/parts.csv (custom). The
 product repo defaults to the folder above the BOM's folder. The BOM is expanded from TOP_PN,
 multiplying quantities through sub-assemblies:
@@ -35,7 +36,7 @@ import sys
 from collections import defaultdict
 from datetime import date
 
-from lib import load_parts, load_product_parts, parts_by_pn, read_csv
+from lib import load_parts, load_product_parts, parts_by_pn, read_bom, read_csv
 
 HEADER = ["Item Name", "Prod No", "# of Items", "Price (Before Tax - Original Currency)", "Item Link"]
 STALE_DAYS = 90
@@ -91,8 +92,8 @@ def main(argv):
     repo = opts["repo"] or os.path.dirname(os.path.dirname(os.path.abspath(bom_path)))
     parts = parts_by_pn(load_parts() + load_product_parts(repo))
     bom = defaultdict(list)
-    for line in read_csv(bom_path):
-        bom[line["parent_pn"]].append(line)
+    for parent, lines in read_bom(bom_path).items():
+        bom[parent].extend(lines)
 
     need, made = defaultdict(float), defaultdict(float)
     top_part = parts.get(top)
