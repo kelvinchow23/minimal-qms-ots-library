@@ -33,9 +33,11 @@ from lib import (CUSTOM_FIELDS, FIELDS, PN_RE, categories, load_prefix,
                  load_product_parts, prefix_path, product_parts_path, projects, write_csv)
 
 
-def next_number(rows, code):
+def next_number(rows, code, assembly=False):
+    """Next free number for this code. Custom parts and assemblies have separate sequences
+    (minimalQMS INTERFACES.md, "Part numbers"): PPP-0001 and PPP-A-0001 can both exist."""
     taken = [int(m.group("num")) for m in (PN_RE.match(r["pn"]) for r in rows)
-             if m and m.group("code") == code]
+             if m and m.group("code") == code and bool(m.group("asm")) == assembly]
     return max(taken, default=0) + 1
 
 
@@ -70,7 +72,7 @@ def main(argv):
             print("error: custom parts need --repo (the product repo that owns them)")
             return 1
         path, cols, rows = product_parts_path(repo), CUSTOM_FIELDS, load_product_parts(repo)
-        num = next_number(rows, code)
+        num = next_number(rows, code, assembly)
         pn = f"{code}-A-{num:04d}" if assembly else f"{code}-{num:04d}"
         row = {"rev": "A", "class": "A"}
         if not os.path.exists(path):
