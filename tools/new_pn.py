@@ -20,7 +20,7 @@ Examples:
         make=fab supplier=JLCPCB link=https://jlcpcb.com
 
 unit_price is the price of one piece. For a part sold in packs, set pack_qty (pieces per
-pack, default 1). McMaster-Carr parts leave manufacturer and mpn blank.
+pack, default 1). McMaster-Carr parts leave manufacturer and manufacturer_pn blank.
 
 New rows start as lifecycle=draft (custom parts also rev=A). price_date defaults to today
 when a price is given.

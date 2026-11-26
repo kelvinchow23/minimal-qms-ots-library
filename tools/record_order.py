@@ -5,7 +5,7 @@ Usage:
 
 REQUISITION.csv is a file produced by requisition.py (and uploaded to the purchasing
 system). Each row is mapped back to its internal PN through the library's parts/CCC.csv files and
-the product's 03_build_package/parts.csv (supplier_pn, then mpn). Rows are appended to PRODUCT_REPO/purchasing/purchases.csv with new P-nnnn line IDs,
+the product's 03_build_package/parts.csv (supplier_pn, then manufacturer_pn). Rows are appended to PRODUCT_REPO/purchasing/purchases.csv with new P-nnnn line IDs,
 and the requisition file is copied to PRODUCT_REPO/purchasing/requisitions/ORDER_REF.csv.
 qty in purchases.csv is in pieces: a line of 2 packs of a pack_qty 100 part records 200.
 The order date defaults to today; use the actual order date, never a backdated one.
@@ -36,7 +36,7 @@ def main(argv):
     lookup = {}
     for p in parts:
         if p.get("supplier") == supplier:
-            for key in (p.get("supplier_pn"), p.get("mpn")):
+            for key in (p.get("supplier_pn"), p.get("manufacturer_pn")):
                 if key:
                     lookup.setdefault(key, p)
 

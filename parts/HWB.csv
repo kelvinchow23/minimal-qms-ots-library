@@ -1,4 +1,4 @@
-pn,description,class,manufacturer,mpn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
+pn,description,class,manufacturer,manufacturer_pn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
 HWB-0001,"Screw, M2 x 6 mm, socket head cap, 18-8 stainless",B,,,McMaster-Carr,91292A831,https://www.mcmaster.com/91292A831/,0.0977,100,USD,2026-11-24,draft,
 HWB-0002,"Screw, M2 x 10 mm, socket head cap, 18-8 stainless",B,,,McMaster-Carr,91292A833,https://www.mcmaster.com/91292A833/,0.0757,100,USD,2026-11-24,draft,
 HWB-0003,"Screw, M2.5 x 6 mm, pan head Phillips, 18-8 stainless",B,,,McMaster-Carr,92000A104,https://www.mcmaster.com/92000A104/,0.0511,100,USD,2026-11-24,draft,
@@ -34,4 +34,4 @@ HWB-0032,"Screw, M6 x 10 mm, button head hex drive, 18-8 stainless",B,,,McMaster
 HWB-0033,"Screw, M6 x 15 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A128,https://www.mcmaster.com/92095A128/,0.228,50,USD,2026-11-24,draft,
 HWB-0034,"Screw, M6 x 20 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A240,https://www.mcmaster.com/92095A240/,0.3732,25,USD,2026-11-24,draft,
 HWB-0035,"Screw, M6 x 25 mm, button head hex drive, 18-8 stainless",B,,,McMaster-Carr,92095A242,https://www.mcmaster.com/92095A242/,0.4304,25,USD,2026-11-24,draft,
-HWB-0036,"Screw, M2 x 5 mm, pan head Phillips, nylon, black",B,,,McMaster-Carr,92492A702,https://www.mcmaster.com/92492A702/,0.1073,100,USD,2026-11-24,draft,"Black (92492A702; off-white is a separate PN). McMaster page checked 2026-11-24: M2 x 0.4, 5 mm long, US$10.73 per pack of 100. Chosen by kc for LSN board mounting (insulating)."
+HWB-0036,"Screw, M2 x 5 mm, pan head Phillips, black nylon",B,,,McMaster-Carr,92492A702,https://www.mcmaster.com/92492A702/,0.1073,100,USD,2026-11-24,draft,Insulating. Off-white is a separate McMaster number.

@@ -89,7 +89,7 @@ def main(argv):
             "PN": pn, "Description": p.get("description", ""),
             "Qty per unit": num(qty / units, 4), "Qty": num(qty, 4),
             "Supplier": p.get("supplier", "") if pn not in made else "(made in-house)",
-            "Supplier PN": p.get("supplier_pn") or p.get("mpn", ""),
+            "Supplier PN": p.get("supplier_pn") or p.get("manufacturer_pn", ""),
             "Unit cost": num(unit, 6), "Currency": cur if unit is not None else "",
             "Unit cost (CAD)": num(cad_unit, 4), "Extended (CAD)": num(ext, 2),
             "Price date": p.get("price_date", "") if unit is not None else "",

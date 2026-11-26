@@ -43,11 +43,11 @@
   .tab.empty { opacity: .45; }
   .tab.on { background: var(--accent); color: #fff; }
   .tab.on small { color: #dbeafe; }
-  main { max-width: 1400px; margin: 0 auto; padding: 12px 16px 40px; }
+  main { max-width: 2000px; margin: 0 auto; padding: 12px 16px 40px; }
   .meta { color: var(--muted); font-size: 12.5px; margin: 2px 0 10px; display: flex; justify-content: space-between;
           gap: 8px; flex-wrap: wrap; }
   .wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
-  table { border-collapse: collapse; width: 100%; min-width: 900px; }
+  table { border-collapse: collapse; width: 100%; min-width: 1700px; }
   th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--panel); position: sticky; top: 0;
        cursor: pointer; user-select: none; white-space: nowrap; }
@@ -55,14 +55,13 @@
   tr:hover td { background: var(--row-hover); }
   tr:last-child td { border-bottom: 0; }
   .pn { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 600; white-space: nowrap; }
-  .copy { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 0 0 4px; font-size: 12px; }
-  .copy:hover { color: var(--accent); }
   .sub { color: var(--muted); font-size: 12.5px; }
   .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; }
   a { color: var(--accent); }
-  .price { white-space: nowrap; }
-  .stale { display: inline-block; margin-top: 2px; padding: 0 6px; border-radius: 4px; background: var(--warn-soft);
-           color: var(--warn); font-size: 11.5px; }
+  td.desc { min-width: 380px; }
+  td.notes { min-width: 260px; color: var(--muted); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.stale { background: var(--warn-soft); color: var(--warn); }
   .badge { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11.5px; background: var(--chip); }
   .badge.released { color: var(--ok); }
   .badge.obsolete { text-decoration: line-through; }
@@ -96,7 +95,7 @@
     <h1>Off-the-shelf (OTS) library</h1>
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Search part numbers, descriptions, MPNs, suppliers…  ( / )" autocomplete="off">
+      <input id="q" type="search" placeholder="Search part numbers, descriptions, manufacturer and supplier PNs…  ( / )" autocomplete="off">
     </label>
     <a class="request" id="request" href="#" target="_blank" rel="noopener">Request a part</a>
   </div>
@@ -117,16 +116,17 @@
 const REPO = "https://github.com/kelvinchow23/minimal-qms-ots-library";
 const STALE_DAYS = 90;
 const FAMILIES = { EC: "Electrical", HW: "Hardware" };
+// One value per column, named and ordered like parts/CCC.csv and the BOM template.
+// [key, label, kind]: kind "num" sorts numerically and aligns right.
 const COLS = [
-  ["pn", "Part no."], ["description", "Description"], ["mpn", "Manufacturer / MPN"],
-  ["supplier", "Supplier / Prod No"], ["unit_price", "Price"], ["class", "Class"], ["lifecycle", "Status"],
+  ["pn", "PN"], ["description", "Description"], ["manufacturer", "Manufacturer"],
+  ["manufacturer_pn", "Manufacturer PN"], ["supplier", "Supplier"], ["supplier_pn", "Supplier PN"],
+  ["unit_price", "Unit price", "num"], ["pack_qty", "Pack qty", "num"], ["pack_price", "Pack price", "num"],
+  ["currency", "Currency"], ["price_date", "Price date"], ["class", "Class"], ["lifecycle", "Status"],
+  ["notes", "Notes"],
 ];
-// Fastener tabs: the description is split into columns, e.g.
-// "Screw, M3 x 6 mm, button head hex drive, 18-8 stainless" -> Type, Thread, Length, Material.
-const SPEC_COLS = [
-  ["pn", "Part no."], ["kind", "Type"], ["thread", "Thread"], ["length", "Length"], ["material", "Material"],
-  ["supplier", "Supplier / Prod No"], ["unit_price", "Price"], ["lifecycle", "Status"],
-];
+// Fastener tabs get filters worked out from the description
+// ("Screw, M3 x 6 mm, button head hex drive, 18-8 stainless"); the table itself stays the same.
 const FILTERS = [["thread", "Thread"], ["kind", "Type"], ["length", "Length"]];
 let data = { prefixes: [], parts: [] }, tab = "ALL", sortKey = "pn", sortDir = 1;
 let filt = { thread: new Set(), kind: new Set(), length: new Set() };
@@ -146,29 +146,35 @@ const prefixOf = (pn) => (pn || "").slice(0, 3);
 const ageDays = (d) => (d ? Math.floor((Date.now() - new Date(d + "T00:00:00")) / 86400000) : null);
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const MATERIAL = /stainless|brass|steel|nylon|alumin|zinc|plastic|peek/i;
+function packPrice(p) {
+  if (!p.unit_price) return "";
+  const v = parseFloat(p.unit_price) * (parseInt(p.pack_qty || "1", 10) || 1);
+  return v.toFixed(2);
+}
+const value = (p, k) => (k === "pack_price" ? packPrice(p) : p[k] ?? "");
+
+const MATERIAL = /stainless|brass|steel|nylon|alumin|zinc|plastic|peek|titanium|copper/i;
 function spec(p) {
   if (p._spec !== undefined) return p._spec;
   const d = p.description || "";
-  const t = d.match(/\bM(\d+(?:\.\d+)?)\b/);
-  if (!t) return (p._spec = null);
   const segs = d.split(/,\s*/);
-  const len = d.match(/\bx\s*(\d+(?:\.\d+)?)\s*mm\b/i);
-  const material = segs.length > 1 && MATERIAL.test(segs[segs.length - 1]) ? segs[segs.length - 1] : "";
-  const style = segs.slice(1).filter((s) => s !== material && !/^M\d/.test(s)).join(", ");
+  const t = (segs[1] || "").match(/^M(\d+(?:\.\d+)?)(?:\s*x\s*(\d+(?:\.\d+)?)\s*mm)?$/);
+  if (!t) return (p._spec = null);
+  const material = segs.length > 2 && MATERIAL.test(segs[segs.length - 1]) ? segs[segs.length - 1] : "";
+  const style = segs.slice(2).filter((s) => s !== material).join(", ");
   // screws are typed by head ("Button head"); everything else by its noun ("Hex nut")
   const kind = style && /head/i.test(style) ? cap(style.replace(/\s*hex drive$/i, "")) : segs[0];
-  return (p._spec = { thread: "M" + t[1], tnum: parseFloat(t[1]), length: len ? len[1] : "",
-                      lnum: len ? parseFloat(len[1]) : NaN, kind, material });
+  return (p._spec = { thread: "M" + t[1], length: t[2] || "", kind });
 }
 
 function haystack(p) {
-  return [p.pn, p.description, p.manufacturer, p.mpn, p.supplier, p.supplier_pn, p.notes].join(" ").toLowerCase();
+  return [p.pn, p.description, p.manufacturer, p.manufacturer_pn, p.supplier, p.supplier_pn, p.notes]
+    .join(" ").toLowerCase();
 }
 const inTab = (p) => tab === "ALL" || prefixOf(p.pn) === tab;
 const matches = (p) => { const h = haystack(p); return terms().every((t) => h.includes(t)); };
-// spec view: a single prefix whose parts mostly have a thread size (fasteners)
-function specView() {
+// filters show on a single prefix whose parts mostly follow the fastener pattern
+function filterView() {
   if (tab === "ALL") return false;
   const ps = data.parts.filter(inTab);
   return ps.length > 0 && ps.filter(spec).length * 2 >= ps.length;
@@ -177,30 +183,23 @@ function passesFilters(p) {
   const s = spec(p);
   return FILTERS.every(([k]) => !filt[k].size || (s && filt[k].has(s[k])));
 }
-function sortVal(p, k) {
-  const s = spec(p) || {};
-  if (k === "unit_price") return parseFloat(p.unit_price || "NaN");
-  if (k === "thread") return s.tnum ?? NaN;
-  if (k === "length") return s.lnum ?? NaN;
-  if (k === "kind" || k === "material") return (s[k] || "").toLowerCase();
-  return (p[k] || "").toLowerCase();
-}
 
+const NUM = new Set(COLS.filter((c) => c[2] === "num").map((c) => c[0]));
 function visible() {
   return data.parts.filter(inTab).filter(matches).filter(passesFilters)
     .sort((a, b) => {
-      const x = sortVal(a, sortKey), y = sortVal(b, sortKey);
-      if (Number.isNaN(x)) return 1; if (Number.isNaN(y)) return -1;
-      if (x !== y) return (x > y ? 1 : -1) * sortDir;
-      return a.pn < b.pn ? -1 : 1;
+      const x = value(a, sortKey), y = value(b, sortKey);
+      if (x === "" && y !== "") return 1;
+      if (y === "" && x !== "") return -1;
+      const c = NUM.has(sortKey) ? parseFloat(x) - parseFloat(y)
+        : String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: "base" });
+      return (c || (a.pn < b.pn ? -1 : 1)) * (c ? sortDir : 1);
     });
 }
 
 function renderTabs() {
-  const ts = terms();
-  const match = (p) => { const h = haystack(p); return ts.every((t) => h.includes(t)); };
   const counts = {};
-  for (const p of data.parts) if (match(p)) counts[prefixOf(p.pn)] = (counts[prefixOf(p.pn)] || 0) + 1;
+  for (const p of data.parts) if (matches(p)) counts[prefixOf(p.pn)] = (counts[prefixOf(p.pn)] || 0) + 1;
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const fams = {};
   for (const c of data.prefixes) (fams[c.family] = fams[c.family] || []).push(c);
@@ -216,7 +215,7 @@ function renderTabs() {
 
 function renderFilters() {
   const box = $("filters");
-  if (!specView()) { box.hidden = true; box.innerHTML = ""; return; }
+  if (!filterView()) { box.hidden = true; box.innerHTML = ""; return; }
   const ps = data.parts.filter(inTab).filter(matches).map(spec).filter(Boolean);
   const order = { thread: (a, b) => parseFloat(a.slice(1)) - parseFloat(b.slice(1)),
                   length: (a, b) => parseFloat(a) - parseFloat(b), kind: (a, b) => a.localeCompare(b) };
@@ -232,56 +231,33 @@ function renderFilters() {
   box.hidden = !html;
 }
 
-// the Length column only shows on tabs where some part has a length (screws, not nuts)
-const hasLength = () => data.parts.filter(inTab).some((p) => spec(p) && spec(p).length);
 function renderHead() {
-  const cols = specView() ? SPEC_COLS.filter(([k]) => k !== "length" || hasLength()) : COLS;
-  $("head").innerHTML = cols.map(([k, label]) =>
-    `<th data-sort="${k}">${label} <span class="arrow">${sortKey === k ? (sortDir > 0 ? "▲" : "▼") : ""}</span></th>`).join("");
+  $("head").innerHTML = COLS.map(([k, label, kind]) =>
+    `<th data-sort="${k}" class="${kind === "num" ? "num" : ""}">${label} <span class="arrow">${sortKey === k ? (sortDir > 0 ? "▲" : "▼") : ""}</span></th>`).join("");
 }
 
-function money(v) { return v >= 1 ? v.toFixed(2) : String(+v.toFixed(4)); }
-function priceCell(p) {
-  if (!p.unit_price) return `<span class="sub">–</span>`;
-  const up = parseFloat(p.unit_price), pack = parseInt(p.pack_qty || "1", 10) || 1;
-  const age = ageDays(p.price_date);
-  const stale = age !== null && age > STALE_DAYS;
-  return `<div><b>${money(up)}</b> ${esc(p.currency)}${pack > 1 ? " / pc" : ""}`
-    + (pack > 1 ? `<div class="sub">${(up * pack).toFixed(2)} / pack of ${pack}</div>` : "")
-    + `<div class="sub">${esc(p.price_date)}</div>`
-    + (stale ? `<div class="stale">${age} days old</div>` : "") + `</div>`;
+function cell(p, k, label, kind) {
+  const v = value(p, k);
+  let html = hl(v), cls = kind === "num" ? "num" : "", title = "";
+  if (k === "pn") html = `<span class="pn">${hl(v)}</span>`;
+  if (k === "supplier_pn" && p.link) html = `<a href="${esc(p.link)}" target="_blank" rel="noopener">${hl(v || "link")}</a>`;
+  if (k === "lifecycle") html = `<span class="badge ${esc(v)}">${esc(v)}</span>`;
+  if (k === "price_date" && p.unit_price) {
+    const age = ageDays(v);
+    if (age !== null && age > STALE_DAYS) { cls += " stale"; title = `${age} days old: check the price`; }
+  }
+  if (["pn", "manufacturer_pn", "supplier_pn"].includes(k)) cls += " mono";
+  if (k === "description") cls += " desc";
+  else if (k === "notes") cls += " notes";
+  else cls += " nowrap";
+  return `<td data-label="${label}" class="${cls.trim()}"${title ? ` title="${esc(title)}"` : ""}>${html}</td>`;
 }
 
 function renderRows() {
   const rows = visible();
-  const sv = specView(), showLen = sv && hasLength();
   const pre = data.prefixes.find((c) => c.code === tab);
   $("count").textContent = `${rows.length} part${rows.length === 1 ? "" : "s"}` + (pre ? ` in ${pre.code} · ${pre.description}` : "");
-  $("rows").innerHTML = rows.map((p) => {
-    const prod = p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${hl(p.supplier_pn || "link")}</a>` : hl(p.supplier_pn);
-    const notes = p.notes ? `<div class="sub">${hl(p.notes)}</div>` : "";
-    const pnCell = `<td data-label="Part no."><span><span class="pn">${hl(p.pn)}</span><button class="copy" data-copy="${esc(p.pn)}" title="Copy part number">⧉</button></span></td>`;
-    const supCell = `<td data-label="Supplier"><div>${hl(p.supplier)}<div class="mono">${prod}</div></div></td>`;
-    const priceTd = `<td data-label="Price" class="price">${priceCell(p)}</td>`;
-    const status = `<td data-label="Status"><span class="badge ${esc(p.lifecycle)}">${esc(p.lifecycle)}</span></td>`;
-    const s = sv && spec(p);
-    if (s) {
-      return `<tr>${pnCell}
-        <td data-label="Type" title="${esc(p.description)}"><div>${hl(s.kind)}${notes}</div></td>
-        <td data-label="Thread" class="nowrap"><b>${hl(s.thread)}</b></td>
-        ${showLen ? `<td data-label="Length" class="nowrap">${s.length ? esc(s.length) + " mm" : `<span class="sub">–</span>`}</td>` : ""}
-        <td data-label="Material" class="nowrap">${hl(s.material)}</td>
-        ${supCell}${priceTd}${status}</tr>`;
-    }
-    if (sv) {  // a part in a fastener tab without a thread size spans the spec columns
-      return `<tr>${pnCell}<td data-label="Description" colspan="${showLen ? 4 : 3}"><div>${hl(p.description)}${notes}</div></td>${supCell}${priceTd}${status}</tr>`;
-    }
-    return `<tr>${pnCell}
-      <td data-label="Description"><div>${hl(p.description)}${notes}</div></td>
-      <td data-label="Manufacturer"><div>${hl(p.manufacturer)}<div class="mono">${hl(p.mpn)}</div></div></td>
-      ${supCell}${priceTd}
-      <td data-label="Class">${esc(p.class)}</td>${status}</tr>`;
-  }).join("");
+  $("rows").innerHTML = rows.map((p) => `<tr>${COLS.map(([k, label, kind]) => cell(p, k, label, kind)).join("")}</tr>`).join("");
   const empty = $("empty");
   empty.hidden = rows.length > 0;
   if (!rows.length) {
@@ -314,8 +290,6 @@ document.addEventListener("click", (e) => {
   }
   const s = e.target.closest("[data-sort]");
   if (s) { const k = s.dataset.sort; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; render(); return; }
-  const c = e.target.closest("[data-copy]");
-  if (c) { navigator.clipboard?.writeText(c.dataset.copy); c.textContent = "✓"; setTimeout(() => (c.textContent = "⧉"), 900); }
 });
 $("q").addEventListener("input", render);
 document.addEventListener("keydown", (e) => {

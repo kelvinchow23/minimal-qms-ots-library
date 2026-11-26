@@ -4,8 +4,8 @@ Off-the-shelf (OTS) parts and the naming registers for
 [minimalQMS](https://github.com/kelvinchow23/minimal-qms) product repos.
 
 **Browse and search:** https://kelvinchow23.github.io/minimal-qms-ots-library/ — one tab per prefix,
-search across every field, flags prices older than 90 days. Fastener tabs split descriptions
-into Type / Thread / Length / Material with filters, and prices show per piece and per pack. To add or change a part, use
+search across every field, flags prices older than 90 days. One value per column, matching
+the BOM template; fastener tabs add Thread / Type / Length filters. To add or change a part, use
 **Request a part** on the site (a GitHub issue that an agent turns into a reviewed PR).
 
 - **Off-the-shelf (OTS) parts only:** manufacturer, MPN, supplier, vendor number, link,
@@ -49,17 +49,32 @@ its KiCad BOM keeps their MPN and LCSC numbers. Use `ECE` only for components bo
 
 One file per prefix, like one tab per prefix in a workbook. Every file has the same columns:
 
-`pn, description, class, manufacturer, mpn, supplier, supplier_pn, link, unit_price,
-pack_qty, currency, price_date, lifecycle, notes`
+`pn, description, class, manufacturer, manufacturer_pn, supplier, supplier_pn, link,
+unit_price, pack_qty, currency, price_date, lifecycle, notes`
 
+**One value per column.** The purchasing columns have the same names and order as the
+product BOM template (`02_design/build_document/bom.csv`), so a library row copies into a
+BOM column for column (`pn` goes into `internal_pn`). The site shows exactly these columns,
+one value each, plus the worked-out `pack price`.
+
+- `description`: one line, the text you want on the BOM. Start with what the part is, then
+  its key specs, comma-separated; the brand goes in `manufacturer`, not here.
+  - Fasteners (`HWB`, `HWN`, `HWW`, `HWS`): `Type, size, [style, ]material`, colour or
+    finish inside the material. Screws give the length.
+    `Screw, M3 x 6 mm, button head hex drive, 18-8 stainless` ·
+    `Screw, M2 x 5 mm, pan head Phillips, black nylon` · `Hex nut, M3, 18-8 stainless`.
+    The site builds its Thread / Type / Length filters from this, and `check.py` enforces it.
+  - Everything else: `Sensor board, BME280 temperature/humidity/pressure, Qwiic` ·
+    `Cable, Qwiic/STEMMA QT (JST SH 4-pin), 100 mm`.
 - `unit_price` is the price of **one piece**; `pack_qty` is how many pieces you buy at once
   (`1` if sold singly). A pack of 100 screws for 6.98 USD is `unit_price=0.0698`,
   `pack_qty=100`. The pack price is not stored: it is always `unit_price × pack_qty`.
 - `supplier_pn` is the supplier's own number. **McMaster-Carr parts leave `manufacturer` and
-  `mpn` blank**: McMaster hides them, and `check.py` enforces this.
-- Write fastener descriptions as `Type, size, style, material`, e.g.
-  `Screw, M3 x 6 mm, button head hex drive, 18-8 stainless` or `Hex nut, M3, 18-8 stainless`.
-  The site splits them into Type / Thread / Length / Material columns with filters.
+  `manufacturer_pn` blank**: McMaster hides them, and `check.py` enforces this.
+- `notes`: only what a buyer needs that has no column (an alternate source, a certification,
+  "insulating"), one sentence under 120 characters. Never prices, dates, part numbers that
+  already have a column, or project decisions (those live in the product repo).
+  `check.py` rejects long notes and notes with prices or dates.
 
 ## Product repo parts.csv (custom)
 
@@ -83,7 +98,7 @@ Standard-library Python. Run from the repo root.
 ```bash
 # OTS part (prints the new PN)
 python tools/new_pn.py ECE "365 nm UV LED, 3535" class=A \
-    manufacturer=Lumileds mpn=L1F3-U365200014000 supplier=Mouser \
+    manufacturer=Lumileds manufacturer_pn=L1F3-U365200014000 supplier=Mouser \
     supplier_pn=997-L1F3U36520001400 link=https://www.mouser.com/... unit_price=4.12 currency=CAD
 
 # custom part or assembly, written to the product repo's 03_build_package/parts.csv
