@@ -2,7 +2,8 @@
 
 Usage:
     python tools/requisition.py BOM.csv TOP_PN QTY [--repo PRODUCT_REPO] [--out DIR]
-                                [--stock STOCK.csv] [--cart-link SUPPLIER=URL ...] [--skip-class C]
+                                [--stock STOCK.csv] [--plan PLAN.csv] [--cart-link SUPPLIER=URL ...]
+                                [--skip-class C]
 
 BOM.csv is a product repo's BOM: a build document's bom.csv (02_design/<assembly>/bom.csv) or an
 older master bom.csv (parent_pn, parent_rev, pn, qty, ...). Parts are looked
@@ -17,6 +18,9 @@ multiplying quantities through sub-assemblies:
   - anything else is an error.
 
 STOCK.csv (optional) has columns pn, qty_on_hand (pieces); stock is subtracted.
+The parts plan, one line per part (needed, on hand, to order, and where it comes from: order,
+stock or made in house), is always printed for the human to review; --plan PLAN.csv also
+writes it, e.g. to the product repo's builds/B00n/parts_plan.csv.
 Parts sold in packs (pack_qty > 1) are ordered in whole packs: 12 screws from a pack of 100
 is 1 item.
 --cart-link SUPPLIER=URL puts one cart link on every row for that supplier.
@@ -43,7 +47,7 @@ STALE_DAYS = 90
 
 
 def parse_args(argv):
-    pos, opts, cart = [], {"out": ".", "stock": None, "skip": set(), "repo": None}, {}
+    pos, opts, cart = [], {"out": ".", "stock": None, "plan": None, "skip": set(), "repo": None}, {}
     it = iter(argv[1:])
     for a in it:
         if a == "--out":
@@ -52,6 +56,8 @@ def parse_args(argv):
             opts["repo"] = next(it)
         elif a == "--stock":
             opts["stock"] = next(it)
+        elif a == "--plan":
+            opts["plan"] = next(it)
         elif a == "--cart-link":
             k, v = next(it).split("=", 1)
             cart[k] = v
@@ -107,16 +113,23 @@ def main(argv):
         stock = {r["pn"]: float(r["qty_on_hand"] or 0) for r in read_csv(opts["stock"])}
 
     by_supplier = defaultdict(list)
+    plan = []
     warnings = []
     today = date.today()
     for pn in sorted(need):
         p = parts[pn]
-        if p.get("class", "").upper() in opts["skip"]:
-            continue
-        pieces = math.ceil(need[pn] - stock.get(pn, 0))
-        if pieces <= 0:
-            continue
+        on_hand = stock.get(pn, 0)
+        pieces = max(0, math.ceil(need[pn] - on_hand))
         pack = int(p.get("pack_qty") or 1)
+        skipped = p.get("class", "").upper() in opts["skip"]
+        source = "skipped (class)" if skipped else ("order" if pieces and not on_hand else
+                                                    "stock" if not pieces else "stock + order")
+        plan.append({"pn": pn, "description": p.get("description", ""), "needed": f"{need[pn]:g}",
+                     "on_hand": f"{on_hand:g}", "to_order": pieces if not skipped else 0,
+                     "packs": math.ceil(pieces / pack) if pieces and not skipped else 0,
+                     "supplier": p.get("supplier", ""), "source": source})
+        if skipped or pieces <= 0:
+            continue
         qty = math.ceil(pieces / pack)  # orderable items (packs)
         price = p.get("unit_price", "")
         if price:
@@ -135,6 +148,23 @@ def main(argv):
             "Price (Before Tax - Original Currency)": price,
             "Item Link": cart.get(supplier) or p.get("link", ""),
         })
+
+    for pn in sorted(made):
+        plan.append({"pn": pn, "description": parts[pn].get("description", ""), "needed": f"{made[pn]:g}",
+                     "on_hand": "", "to_order": 0, "packs": 0, "supplier": "", "source": "made in house"})
+    cols = ["pn", "description", "needed", "on_hand", "to_order", "packs", "supplier", "source"]
+    print(f"Parts plan: {top} x {units}")
+    print(f"  {'pn':<11}{'needed':>7}{'on hand':>9}{'order':>7}{'packs':>7}  source / supplier")
+    for r in plan:
+        print(f"  {r['pn']:<11}{r['needed']:>7}{r['on_hand']:>9}{r['to_order']:>7}{r['packs']:>7}  "
+              f"{r['source']}{' / ' + r['supplier'] if r['to_order'] else ''}")
+    if opts["plan"]:
+        os.makedirs(os.path.dirname(os.path.abspath(opts["plan"])), exist_ok=True)
+        with open(opts["plan"], "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n")
+            w.writeheader()
+            w.writerows(plan)
+        print(f"wrote {opts['plan']}")
 
     os.makedirs(opts["out"], exist_ok=True)
     for supplier, rows in sorted(by_supplier.items()):
