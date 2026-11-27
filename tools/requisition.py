@@ -2,8 +2,8 @@
 
 Usage:
     python tools/requisition.py BOM.csv TOP_PN QTY [--repo PRODUCT_REPO] [--out DIR]
-                                [--stock STOCK.csv] [--plan PLAN.csv] [--cart-link SUPPLIER=URL ...]
-                                [--skip-class C]
+                                [--stock STOCK.csv] [--plan PLAN.csv] [--sheet SHEET.md]
+                                [--build B00n] [--cart-link SUPPLIER=URL ...] [--skip-class C]
 
 BOM.csv is a product repo's BOM: a build document's bom.csv (02_design/<assembly>/bom.csv) or an
 older master bom.csv (parent_pn, parent_rev, pn, qty, ...). Parts are looked
@@ -21,6 +21,12 @@ STOCK.csv (optional) has columns pn, qty_on_hand (pieces); stock is subtracted.
 The parts plan, one line per part (needed, on hand, to order, and where it comes from: order,
 stock or made in house), is always printed for the human to review; --plan PLAN.csv also
 writes it, e.g. to the product repo's builds/B00n/parts_plan.csv.
+--sheet SHEET.md writes the order sheet: the document a person reviews before any req is sent.
+It lists how many purchase reqs are needed (one per supplier), each req's lines, quantities,
+prices and totals (also in CAD, from rates.csv), the parts taken from stock (marked where they
+must be the exact part) and the parts made in house, and a short checklist. Each req section
+names its upload file, which is what the organization's purchase-req tool reads.
+--build B00n names the build in the sheet's title.
 Parts sold in packs (pack_qty > 1) are ordered in whole packs: 12 screws from a pack of 100
 is 1 item.
 --cart-link SUPPLIER=URL puts one cart link on every row for that supplier.
@@ -47,7 +53,8 @@ STALE_DAYS = 90
 
 
 def parse_args(argv):
-    pos, opts, cart = [], {"out": ".", "stock": None, "plan": None, "skip": set(), "repo": None}, {}
+    pos, opts, cart = [], {"out": ".", "stock": None, "plan": None, "sheet": None, "build": "",
+                           "skip": set(), "repo": None}, {}
     it = iter(argv[1:])
     for a in it:
         if a == "--out":
@@ -58,6 +65,10 @@ def parse_args(argv):
             opts["stock"] = next(it)
         elif a == "--plan":
             opts["plan"] = next(it)
+        elif a == "--sheet":
+            opts["sheet"] = next(it)
+        elif a == "--build":
+            opts["build"] = next(it)
         elif a == "--cart-link":
             k, v = next(it).split("=", 1)
             cart[k] = v
@@ -89,6 +100,70 @@ def expand(bom, parts, top, qty, need, made, path=()):
             raise SystemExit(f"error: {pn} has no supplier, no BOM lines and no make method")
 
 
+RATES = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "rates.csv")
+
+
+def money(x):
+    return f"{x:,.2f}"
+
+
+def write_sheet(path, top, units, build, bom_path, by_supplier, files, plan, bom_line, warnings, today):
+    """The order sheet (Markdown): what a person reviews before any purchase req is sent."""
+    rates = {r["currency"]: float(r["cad_per_unit"]) for r in read_csv(RATES)} if os.path.exists(RATES) else {"CAD": 1.0}
+    title = f"Order sheet: {top} x {units}" + (f", build {build}" if build else "")
+    out = [f"# {title}", "",
+           f"Date {today.isoformat()}. From the BOM `{os.path.basename(bom_path)}` of {top}. "
+           "Prices before tax; CAD totals use rates.csv.", ""]
+    reqs = []
+    for supplier in sorted(by_supplier):
+        rows = by_supplier[supplier]
+        cur = rows[0]["_currency"]
+        total = sum(float(r["Price (Before Tax - Original Currency)"] or 0) * r["# of Items"] for r in rows)
+        cad = total * rates[cur] if cur in rates else None
+        reqs.append((supplier, rows, cur, total, cad))
+    grand = sum(c for *_, c in reqs if c is not None)
+    stock = [r for r in plan if r["source"] in ("stock", "stock + order")]
+    made = [r for r in plan if r["source"] == "made in house"]
+    out += ["## Summary", "",
+            f"- **Purchase reqs to send: {len(reqs)}** (one per supplier)",
+            f"- **To order:** CA${money(grand)} before tax" + ("" if all(c is not None for *_, c in reqs) else " (some totals have no CAD rate)"),
+            f"- **From stock:** {len(stock)} parts; **made in house:** {len(made)} parts", "",
+            "| Req | Supplier | Lines | Total | Total CAD |", "|---|---|---|---|---|"]
+    for i, (supplier, rows, cur, total, cad) in enumerate(reqs, 1):
+        out.append(f"| {i} | {supplier} | {len(rows)} | {cur} {money(total)} | {money(cad) if cad is not None else '?'} |")
+    for i, (supplier, rows, cur, total, cad) in enumerate(reqs, 1):
+        out += ["", f"## Req {i}: {supplier}", "",
+                f"Upload file for the purchase req: `{os.path.basename(files[supplier])}`", "",
+                "| PN | Item | Supplier part | Qty to order | Price each | Line total | Link |",
+                "|---|---|---|---|---|---|---|"]
+        for r in rows:
+            price = float(r["Price (Before Tax - Original Currency)"] or 0)
+            out.append(f"| {r['_pn']} | {r['Item Name']} | {r['Prod No']} | {r['# of Items']} | "
+                       f"{cur} {money(price)} | {cur} {money(price * r['# of Items'])} | {r['Item Link']} |")
+        out.append(f"| | **Total** | | | | **{cur} {money(total)}** | |")
+    out += ["", "## From stock (count before the build)", "",
+            "| PN | Part | Needed | On hand | Still to order | Must be exactly this part |",
+            "|---|---|---|---|---|---|"]
+    for r in stock:
+        exact = (bom_line.get(r["pn"], {}).get("exact_part", "") or "").lower() == "yes"
+        mpn = bom_line.get(r["pn"], {}).get("manufacturer_pn", "") or bom_line.get(r["pn"], {}).get("mpn", "")
+        out.append(f"| {r['pn']} | {r['description']} | {r['needed']} | {r['on_hand']} | {r['to_order']} | "
+                   f"{'yes: ' + mpn if exact else 'no: any matching part'} |")
+    if made:
+        out += ["", "## Made in house", "", "| PN | Part | Quantity |", "|---|---|---|"]
+        out += [f"| {r['pn']} | {r['description']} | {r['needed']} |" for r in made]
+    if warnings:
+        out += ["", "## Warnings", ""] + [f"- {w}" for w in warnings]
+    out += ["", "## Check before sending", "",
+            "- [ ] Number of units is right.",
+            "- [ ] Stock counted, and stock of an exact part is that exact part.",
+            "- [ ] Each link opens the right part, in stock.",
+            "- [ ] Quantities and packs are right; nothing ordered twice.", ""]
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(out))
+
+
 def main(argv):
     pos, opts, cart = parse_args(argv)
     if len(pos) != 3:
@@ -100,6 +175,7 @@ def main(argv):
     bom = defaultdict(list)
     for parent, lines in read_bom(bom_path).items():
         bom[parent].extend(lines)
+    bom_line = {ln["pn"]: ln for lines in bom.values() for ln in lines}  # for exact_part
 
     need, made = defaultdict(float), defaultdict(float)
     top_part = parts.get(top)
@@ -142,6 +218,7 @@ def main(argv):
                 warnings.append(f"{pn}: price is {age} days old ({p['price_date']})")
         supplier = p["supplier"]
         by_supplier[supplier].append({
+            "_pn": pn, "_currency": p.get("currency", "") or "CAD",
             "Item Name": p.get("description", "") + (f", pack of {pack}" if pack > 1 else ""),
             "Prod No": p.get("supplier_pn") or p.get("mpn", ""),
             "# of Items": qty,
@@ -167,14 +244,20 @@ def main(argv):
         print(f"wrote {opts['plan']}")
 
     os.makedirs(opts["out"], exist_ok=True)
+    files = {}
     for supplier, rows in sorted(by_supplier.items()):
         slug = re.sub(r"[^A-Za-z0-9]+", "-", supplier).strip("-").lower()
         out = os.path.join(opts["out"], f"{slug}-{today.isoformat()}.csv")
+        files[supplier] = out
         with open(out, "w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=HEADER, lineterminator="\n")
+            w = csv.DictWriter(f, fieldnames=HEADER, lineterminator="\n", extrasaction="ignore")
             w.writeheader()
             w.writerows(rows)
         print(f"wrote {out} ({len(rows)} lines)")
+    if opts["sheet"]:
+        write_sheet(opts["sheet"], top, units, opts["build"], bom_path, by_supplier, files, plan,
+                    bom_line, warnings, today)
+        print(f"wrote {opts['sheet']}")
     for pn in sorted(made):
         print(f"made in-house, not ordered: {pn} x{made[pn]:g} ({parts[pn].get('make')})")
     for w in warnings:
