@@ -39,7 +39,9 @@ is 1 item.
 --cart-link SUPPLIER=URL puts one cart link on every row for that supplier.
 
 Output: DIR/<supplier>-<YYYY-MM-DD>.csv with exactly the purchasing template's columns:
-  Item Name, Prod No, # of Items, Price (Before Tax - Original Currency), Item Link
+  Item Name, Prod No, # of Items, Price (Before Tax - Original Currency), Item Link, Notes
+Notes says what each line is for and its internal PN, e.g. "minimalQMS: LSN-A-0001 build B001;
+ECM-0001" (the Notes field of the purchase line, for the requester's own tracing).
 Prod No is the supplier part number, or the MPN if none. # of Items counts packs, and
 Price is the price of one item (unit_price x pack_qty); Item Name ends ", pack of N" for
 packs. price_date is not included. A warning is printed for missing prices and
@@ -55,7 +57,7 @@ from datetime import date
 
 from lib import load_parts, load_product_parts, parts_by_pn, read_bom, read_csv
 
-HEADER = ["Item Name", "Prod No", "# of Items", "Price (Before Tax - Original Currency)", "Item Link"]
+HEADER = ["Item Name", "Prod No", "# of Items", "Price (Before Tax - Original Currency)", "Item Link", "Notes"]
 STALE_DAYS = 90
 
 
@@ -302,6 +304,12 @@ def main(argv):
             w.writeheader()
             w.writerows(plan)
         print(f"wrote {opts['plan']}")
+
+    for rows in by_supplier.values():
+        for r in rows:
+            fors = "; ".join(k.replace(f"{top} {opts['build']}", f"{top} build {opts['build']}") if opts["build"] else k
+                             for k in r["_for"])
+            r["Notes"] = f"minimalQMS: {fors}; {r['_pn']}"
 
     os.makedirs(opts["out"], exist_ok=True)
     files = {}
