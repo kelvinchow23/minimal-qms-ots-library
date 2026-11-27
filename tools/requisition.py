@@ -240,7 +240,7 @@ def main(argv):
         by_supplier[supplier].append({
             "_pn": pn, "_currency": p.get("currency", "") or "CAD", "_for": {for_build: qty}, "_pieces": pieces,
             "Item Name": p.get("description", "") + (f", pack of {pack}" if pack > 1 else ""),
-            "Prod No": p.get("supplier_pn") or p.get("mpn", ""),
+            "Prod No": p.get("supplier_pn") or p.get("manufacturer_pn", ""),
             "# of Items": qty,
             "Price (Before Tax - Original Currency)": price,
             "Item Link": cart.get(supplier) or p.get("link", ""),
@@ -279,7 +279,7 @@ def main(argv):
                     "_pn": key, "_currency": p.get("currency", "") or "CAD", "_for": {purpose: packs},
                     "_pieces": qty,
                     "Item Name": p.get("description", "") + (f", pack of {pack}" if pack > 1 else ""),
-                    "Prod No": p.get("supplier_pn") or p.get("mpn", ""),
+                    "Prod No": p.get("supplier_pn") or p.get("manufacturer_pn") or p.get("mpn", ""),
                     "# of Items": packs,
                     "Price (Before Tax - Original Currency)": price,
                     "Item Link": cart.get(supplier) or p.get("link", ""),

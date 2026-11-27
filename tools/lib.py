@@ -19,7 +19,7 @@ PN_RE = re.compile(r"^(?P<code>[A-Z]{3})-(?P<asm>A-)?(?P<num>\d{4})$")
 
 # OTS parts in this library (same columns in every parts/CCC.csv)
 FIELDS = [
-    "pn", "description", "class", "manufacturer", "mpn", "supplier", "supplier_pn",
+    "pn", "description", "class", "manufacturer", "manufacturer_pn", "supplier", "supplier_pn",
     "link", "unit_price", "pack_qty", "currency", "price_date", "lifecycle", "notes",
 ]
 # unit_price is per piece; pack_qty is how many pieces one orderable item holds (1 if sold
