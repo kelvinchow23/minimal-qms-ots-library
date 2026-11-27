@@ -1,5 +1,6 @@
 pn,description,class,manufacturer,manufacturer_pn,supplier,supplier_pn,link,unit_price,pack_qty,currency,price_date,lifecycle,notes
 ECM-0001,"Sensor board, BME280 temperature/humidity/pressure, Qwiic",A,SparkFun,SEN-15440,Mouser,474-SEN-15440,https://www.mouser.ca/ProductDetail/474-SEN-15440,24.41,1,CAD,2026-11-24,draft,
 ECM-0002,"Sensor board, SGP40 VOC, STEMMA QT/Qwiic",A,Adafruit,4829,Mouser,485-4829,https://www.mouser.ca/ProductDetail/485-4829,21.53,1,CAD,2026-11-24,draft,
-ECM-0003,"Adapter board, Qwiic SHIM for Raspberry Pi GPIO, push-fit",A,SparkFun,DEV-15794,Mouser,474-DEV-15794,https://www.mouser.ca/ProductDetail/474-DEV-15794,2.81,1,CAD,2026-11-24,draft,
+ECM-0003,"Adapter board, Qwiic SHIM for Raspberry Pi GPIO, push-fit",B,SparkFun,DEV-15794,Mouser,474-DEV-15794,https://www.mouser.ca/ProductDetail/474-DEV-15794,2.81,1,CAD,2026-11-24,draft,
 ECM-0004,"Single-board computer, Raspberry Pi Zero 2 W, pre-soldered GPIO header",A,Raspberry Pi,SC0721,PiShop,112-1,https://www.pishop.ca/product/raspberry-pi-zero-2-w-with-header/,,1,,,draft,Alternate source: Mouser 358-SC0721.
+ECM-0005,"Sensor board, AS5600 magnetic angle, STEMMA QT/Qwiic",A,Adafruit,6357,Mouser,485-6357,https://www.mouser.ca/ProductDetail/485-6357,8.57,1,CAD,2026-11-27,draft,

@@ -75,10 +75,53 @@ def product_parts_path(repo):
     return os.path.join(repo, PRODUCT_PARTS)
 
 
+def product_bom_paths(repo):
+    """BOM sources of a product repo (minimalQMS build documents): 02_design/<folder>/bom.csv."""
+    base = os.path.join(repo, "02_design")
+    if not os.path.isdir(base):
+        return []
+    return sorted(os.path.join(base, d, "bom.csv") for d in os.listdir(base)
+                  if os.path.exists(os.path.join(base, d, "bom.csv")))
+
+
+def bom_assembly(path):
+    """The assembly a BOM source belongs to: 'assembly' in the steps.json beside it."""
+    steps = os.path.join(os.path.dirname(path), "steps.json")
+    if os.path.exists(steps):
+        import json
+        return json.load(open(steps, encoding="utf-8")).get("assembly", "")
+    return ""
+
+
+def read_bom(path):
+    """{assembly PN: [lines]} from a BOM. Reads the old master BOM (parent_pn column) and the
+    per-assembly BOM (no parent_pn; PN column 'pn' or 'internal_pn'); each line gets 'pn'."""
+    out = {}
+    for line in read_csv(path):
+        line = dict(line, pn=line.get("pn") or line.get("internal_pn", ""))
+        parent = line.get("parent_pn") or bom_assembly(path)
+        out.setdefault(parent, []).append(line)
+    return out
+
+
 def load_product_parts(repo):
-    """Custom parts of a product repo, or [] if it has none yet."""
+    """Custom parts and assemblies of a product repo, or [] if it has none yet. From
+    03_build_package/parts.csv when a repo still has one, else from its BOM sources: each
+    assembly, and every custom line (category 'Custom ...')."""
     path = product_parts_path(repo)
-    return read_csv(path) if os.path.exists(path) else []
+    if os.path.exists(path):
+        return read_csv(path)
+    rows = {}
+    for bom_path in product_bom_paths(repo):
+        for asm, lines in read_bom(bom_path).items():
+            if asm:
+                rows.setdefault(asm, {"pn": asm, "rev": "", "description": "assembly", "class": "A", "make": "assemble"})
+            for ln in lines:
+                if ln.get("category", "").startswith("Custom"):
+                    rows.setdefault(ln["pn"], {"pn": ln["pn"], "rev": ln.get("rev", ""), "description": ln.get("description", ""),
+                                               "class": ln.get("class", "A"), "make": ln.get("make") or "custom",
+                                               "notes": ln.get("notes", "")})
+    return list(rows.values())
 
 
 def categories(path=CATEGORIES):

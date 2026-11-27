@@ -2,7 +2,8 @@
 
 Usage:
     python tools/check.py                      # library: parts/*.csv, categories.csv, projects.csv
-    python tools/check.py --repo PRODUCT_REPO  # also the product's 03_build_package/parts.csv
+    python tools/check.py --repo PRODUCT_REPO  # also the product's custom parts (BOM sources,
+                                               # or 03_build_package/parts.csv in older repos)
 """
 import os
 import re
@@ -149,11 +150,14 @@ def check_rates(used, errors):
 
 def check_product(repo, errors):
     path = product_parts_path(repo)
+    legacy = os.path.exists(path)  # older repos keep a parts.csv; newer ones use the BOM sources
     rows = load_product_parts(repo)
     if not rows:
         return 0
-    if header(path) != CUSTOM_FIELDS:
+    if legacy and header(path) != CUSTOM_FIELDS:
         errors.append(f"{path} header must be: {','.join(CUSTOM_FIELDS)}")
+    if not legacy:
+        path = "BOM sources"
     projs, seen = projects(), set()
     for i, r in enumerate(rows, start=2):
         pn = r.get("pn", "")
@@ -166,14 +170,14 @@ def check_product(repo, errors):
         if pn in seen:
             errors.append(f"{where}: duplicate part number")
         seen.add(pn)
-        for k in ("description", "rev"):
+        for k in ("description", "rev") if legacy or not PN_RE.match(pn) or not PN_RE.match(pn).group("asm") else ("description",):
             if not r.get(k):
                 errors.append(f"{where}: {k} is required")
         if r.get("class") not in ("A", "B", "C"):
             errors.append(f"{where}: class must be A, B or C")
-        if r.get("lifecycle") not in LIFECYCLE:
+        if legacy and r.get("lifecycle") not in LIFECYCLE:
             errors.append(f"{where}: lifecycle must be draft, released or obsolete")
-        if r.get("lifecycle") == "released" and not r.get("source"):
+        if legacy and r.get("lifecycle") == "released" and not r.get("source"):
             errors.append(f"{where}: released custom part needs source (CAD reference)")
         check_price(r, where, errors)
     return len(seen)
