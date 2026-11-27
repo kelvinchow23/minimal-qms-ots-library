@@ -244,23 +244,6 @@ def main(argv):
             "Item Link": cart.get(supplier) or p.get("link", ""),
         })
 
-    for pn in sorted(made):
-        plan.append({"pn": pn, "description": parts[pn].get("description", ""), "needed": f"{made[pn]:g}",
-                     "on_hand": "", "to_order": 0, "packs": 0, "supplier": "", "source": "made in house"})
-    cols = ["pn", "description", "needed", "on_hand", "to_order", "packs", "supplier", "source"]
-    print(f"Parts plan: {top} x {units}")
-    print(f"  {'pn':<11}{'needed':>7}{'on hand':>9}{'order':>7}{'packs':>7}  source / supplier")
-    for r in plan:
-        print(f"  {r['pn']:<11}{r['needed']:>7}{r['on_hand']:>9}{r['to_order']:>7}{r['packs']:>7}  "
-              f"{r['source']}{' / ' + r['supplier'] if r['to_order'] else ''}")
-    if opts["plan"]:
-        os.makedirs(os.path.dirname(os.path.abspath(opts["plan"])), exist_ok=True)
-        with open(opts["plan"], "w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n")
-            w.writeheader()
-            w.writerows(plan)
-        print(f"wrote {opts['plan']}")
-
     if opts["extra"]:
         for i, x in enumerate(read_csv(opts["extra"]), 1):
             pn, purpose = (x.get("pn") or "").strip(), (x.get("for") or "").strip() or "extra"
@@ -302,6 +285,23 @@ def main(argv):
             plan.append({"pn": key, "description": p.get("description", ""), "needed": f"{qty:g}",
                          "on_hand": "", "to_order": qty, "packs": packs, "supplier": supplier,
                          "source": f"extra: {purpose}"})
+
+    for pn in sorted(made):
+        plan.append({"pn": pn, "description": parts[pn].get("description", ""), "needed": f"{made[pn]:g}",
+                     "on_hand": "", "to_order": 0, "packs": 0, "supplier": "", "source": "made in house"})
+    cols = ["pn", "description", "needed", "on_hand", "to_order", "packs", "supplier", "source"]
+    print(f"Parts plan: {top} x {units}")
+    print(f"  {'pn':<11}{'needed':>7}{'on hand':>9}{'order':>7}{'packs':>7}  source / supplier")
+    for r in plan:
+        print(f"  {r['pn']:<11}{r['needed']:>7}{r['on_hand']:>9}{r['to_order']:>7}{r['packs']:>7}  "
+              f"{r['source']}{' / ' + r['supplier'] if r['to_order'] else ''}")
+    if opts["plan"]:
+        os.makedirs(os.path.dirname(os.path.abspath(opts["plan"])), exist_ok=True)
+        with open(opts["plan"], "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n")
+            w.writeheader()
+            w.writerows(plan)
+        print(f"wrote {opts['plan']}")
 
     os.makedirs(opts["out"], exist_ok=True)
     files = {}

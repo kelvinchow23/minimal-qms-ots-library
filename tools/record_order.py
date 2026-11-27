@@ -2,6 +2,7 @@
 
 Usage:
     python tools/record_order.py REQUISITION.csv SUPPLIER ORDER_REF PRODUCT_REPO [--date YYYY-MM-DD]
+                                 [--plan builds/B00n/parts_plan.csv]
 
 REQUISITION.csv is a file produced by requisition.py (and uploaded to the purchasing
 system). Each row is mapped back to its internal PN through the library's parts/CCC.csv files and
@@ -9,11 +10,15 @@ the product's 03_build_package/parts.csv (supplier_pn, then mpn). Rows are appen
 and the requisition file is copied to PRODUCT_REPO/purchasing/requisitions/ORDER_REF.csv.
 qty in purchases.csv is in pieces: a line of 2 packs of a pack_qty 100 part records 200.
 The order date defaults to today; use the actual order date, never a backdated one.
+--plan (the parts plan requisition.py wrote for the build) records only this product's share:
+lines that were extras for other projects or stock (requisition.py --extra) are skipped, and a
+line ordered partly as an extra records only the build's quantity, with the rest in notes.
 """
 import os
 import re
 import shutil
 import sys
+from collections import defaultdict
 from datetime import date
 
 from lib import load_parts, load_product_parts, read_csv, write_csv
@@ -28,6 +33,14 @@ def main(argv):
     if "--date" in argv:
         order_date = argv[argv.index("--date") + 1]
         args.remove(order_date)
+    plan = None
+    if "--plan" in argv:
+        plan_path = argv[argv.index("--plan") + 1]
+        args.remove(plan_path)
+        plan = defaultdict(int)   # pn -> pieces ordered for this build
+        for r in read_csv(plan_path):
+            if r["source"] in ("order", "stock + order"):
+                plan[r["pn"]] += int(float(r["to_order"] or 0))
     if len(args) != 4:
         print(__doc__)
         return 1
@@ -57,11 +70,19 @@ def main(argv):
             print(f"error: Prod No {prod_no} ({row['Item Name']}) has no {supplier} entry in the library or the product")
             return 1
         items, pack = int(float(row["# of Items"])), int(p.get("pack_qty") or 1)
+        qty, notes = items * pack, [f"{items} pack(s) of {pack}"] if pack > 1 else []
+        if plan is not None:
+            if not plan.get(p["pn"]):
+                print(f"skipped (not for this product): {p['pn']} {row['Item Name']}")
+                continue
+            if plan[p["pn"]] < qty:
+                notes.append(f"{qty} ordered on this req; {qty - plan[p['pn']]} for other purposes")
+                qty = plan[p["pn"]]
         new.append({
             "line_id": f"P-{nxt:04d}", "pn": p["pn"], "description": p["description"],
-            "qty": items * pack, "supplier": supplier, "link": row["Item Link"],
+            "qty": qty, "supplier": supplier, "link": row["Item Link"],
             "order_ref": order_ref, "order_date": order_date, "inspection": "",
-            "notes": f"{items} pack(s) of {pack}" if pack > 1 else "",
+            "notes": "; ".join(notes),
         })
         nxt += 1
 
